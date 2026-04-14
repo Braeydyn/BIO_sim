@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACO ANTIVIRUS — NEURAL DEFENSE GRID</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #0a0a0f;
+    --panel:      #12121a;
+    --muted:      #1c1c2e;
+    --surface:    rgba(0,255,136,0.03);
+    --surface-hi: rgba(0,255,136,0.07);
+    --border:     #2a2a3a;
+    --border-hi:  rgba(0,255,136,0.3);
+    --neon:       #00ff88;
+    --neon-lo:    rgba(0,255,136,0.12);
+    --neon-mid:   rgba(0,255,136,0.25);
+    --magenta:    #ff00ff;
+    --magenta-lo: rgba(255,0,255,0.12);
+    --cyan:       #00d4ff;
+    --cyan-lo:    rgba(0,212,255,0.12);
+    --red:        #ff3366;
+    --red-lo:     rgba(255,51,102,0.12);
+    --amber:      #ffaa00;
+    --text:       #e0e0e0;
+    --text-hi:    #ffffff;
+    --text-lo:    #6b7280;
+    --font-ui:    'Orbitron', monospace;
+    --font-data:  'Fira Code', 'JetBrains Mono', 'Share Tech Mono', monospace;
+    --chamfer:    clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:var(--font-data); overflow:hidden; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+
+  /* No CRT scanlines — clean HUD rendering */
+
+  /* Grid circuit pattern */
+  #app {
+    position:relative; z-index:1;
+    display:grid;
+    grid-template-columns: 260px 1fr 260px;
+    grid-template-rows: 54px 1fr 158px;
+    height:100vh; gap:1px;
+    background:var(--border);
+  }
+  #app::before {
+    content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image: linear-gradient(rgba(0,255,136,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.025) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    grid-column:1/-1; background:var(--panel);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px; border-bottom:1px solid var(--border);
+    position:relative; z-index:2;
+  }
+  #header::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--neon), transparent);
+    opacity:0.35;
+  }
+
+  .logo-group { display:flex; align-items:center; gap:12px; }
+
+  .logo-mark {
+    width:32px; height:32px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--neon-lo); border:1px solid rgba(0,255,136,0.4);
+    clip-path: polygon(0 6px, 6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px));
+    box-shadow: 0 0 10px rgba(0,255,136,0.2), inset 0 0 10px rgba(0,255,136,0.05);
+  }
+  .logo-mark svg { width:18px; height:18px; fill:var(--neon); filter:drop-shadow(0 0 4px rgba(0,255,136,0.8)); }
+
+  .logo-text {
+    font-family:var(--font-ui); font-weight:900; font-size:12px;
+    letter-spacing:4px; color:var(--text-hi);
+    text-shadow: 0 0 10px rgba(0,255,136,0.4), -1px 0 rgba(255,0,255,0.3), 1px 0 rgba(0,212,255,0.3);
+  }
+  .logo-sub {
+    font-size:8px; letter-spacing:3px; color:var(--text-lo);
+    border-left:1px solid var(--border); padding-left:10px; margin-left:4px;
+    font-family:var(--font-data);
+  }
+
+  .header-right { display:flex; align-items:center; gap:16px; }
+
+  .header-pill {
+    font-size:8px; letter-spacing:2px; color:var(--neon); opacity:0.6;
+    border:1px solid rgba(0,255,136,0.2); padding:3px 9px;
+    clip-path: polygon(0 4px, 4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px));
+    background:var(--neon-lo);
+  }
+
+  #status-chip {
+    display:flex; align-items:center; gap:7px;
+    padding:5px 12px; border:1px solid rgba(0,255,136,0.4);
+    clip-path: polygon(0 5px, 5px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px));
+    background:var(--neon-lo); transition:all 0.4s;
+    box-shadow: 0 0 8px rgba(0,255,136,0.15);
+  }
+  #status-dot {
+    width:7px; height:7px; background:var(--neon); flex-shrink:0;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation:status-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--neon);
+  }
+  @keyframes status-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  #status-text { font-family:var(--font-ui); font-size:9px; font-weight:700; letter-spacing:3px; color:var(--neon); transition:color 0.4s; }
+  #clock { font-size:11px; color:var(--text-lo); letter-spacing:2px; min-width:68px; text-align:right; font-family:var(--font-data); }
+
+  /* ── SIDE PANELS ── */
+  .side-panel {
+    background:var(--panel); padding:14px;
+    overflow-y:auto; display:flex; flex-direction:column; gap:12px;
+    position:relative; z-index:2;
+  }
+  .side-panel::-webkit-scrollbar { width:2px; }
+  .side-panel::-webkit-scrollbar-thumb { background:rgba(0,255,136,0.2); }
+
+  /* ── SECTION HEADS ── */
+  .section-head { display:flex; align-items:center; gap:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .sh-line { width:2px; height:12px; flex-shrink:0; background:var(--neon); box-shadow:0 0 6px var(--neon); }
+  .sh-line.mag { background:var(--magenta); box-shadow:0 0 6px var(--magenta); }
+  .sh-line.cyn { background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
+  .sh-line.red { background:var(--red); box-shadow:0 0 6px var(--red); }
+  .section-title { font-family:var(--font-ui); font-size:8px; font-weight:700; letter-spacing:4px; color:var(--text); text-transform:uppercase; }
+  .section-title::before { content:'> '; color:var(--neon); }
+
+  /* ── CONTROLS ── */
+  .ctrl-group { display:flex; flex-direction:column; gap:6px; }
+  .ctrl-label { display:flex; justify-content:space-between; align-items:center; font-size:9px; letter-spacing:1.5px; color:var(--text-lo); text-transform:uppercase; }
+  .ctrl-val { font-family:var(--font-ui); font-size:10px; font-weight:700; color:var(--neon); min-width:40px; text-align:right; text-shadow:0 0 6px rgba(0,255,136,0.5); }
+
+  input[type="range"] { -webkit-appearance:none; width:100%; height:2px; background:rgba(0,255,136,0.12); outline:none; cursor:pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; background:var(--neon); cursor:pointer; transition:transform 0.1s; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); box-shadow:0 0 8px var(--neon); }
+  input[type="range"]::-webkit-slider-thumb:hover { transform:scale(1.3); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding:8px 14px; font-family:var(--font-ui); font-size:8px; font-weight:700;
+    letter-spacing:3px; text-transform:uppercase; border:1px solid; cursor:pointer;
+    transition:all 150ms cubic-bezier(0.4,0,0.2,1); background:transparent; position:relative; overflow:hidden;
+    clip-path: polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  .btn::before { content:''; position:absolute; inset:0; background:currentColor; opacity:0; transition:opacity 150ms; }
+  .btn:hover::before { opacity:0.1; }
+  .btn:active { transform:scale(0.975); }
+  .btn-danger { color:var(--red); border-color:rgba(255,51,102,0.5); background:var(--red-lo); }
+  .btn-danger:hover { border-color:var(--red); box-shadow:0 0 12px rgba(255,51,102,0.4), inset 0 0 12px rgba(255,51,102,0.06); }
+  .btn-reset  { color:var(--neon); border-color:rgba(0,255,136,0.3); background:var(--neon-lo); }
+  .btn-reset:hover { border-color:var(--neon); box-shadow:0 0 12px rgba(0,255,136,0.35), inset 0 0 12px rgba(0,255,136,0.06); }
+
+  /* ── THREAT ── */
+  .threat-container { display:flex; flex-direction:column; gap:10px; }
+  .threat-big {
+    font-family:var(--font-ui); font-size:40px; font-weight:900; text-align:center;
+    letter-spacing:2px; color:var(--text-hi); transition:all 0.5s; line-height:1;
+    text-shadow: 0 0 15px rgba(0,255,136,0.5), -1px 0 rgba(255,0,255,0.25), 1px 0 rgba(0,212,255,0.25);
+  }
+  .threat-label-row { display:flex; justify-content:space-between; font-size:8px; letter-spacing:2px; color:var(--text-lo); font-family:var(--font-data); }
+  .threat-track { width:100%; height:3px; background:rgba(255,255,255,0.05); overflow:hidden; position:relative; }
+  #threat-fill { height:100%; width:0%; transition:width 0.35s ease, background 0.5s; background:var(--neon); box-shadow:0 0 8px var(--neon); }
+
+  /* ── METRICS ── */
+  .metric-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .metric-label { font-size:9px; letter-spacing:1.5px; color:var(--text-lo); }
+  .metric-label::before { content:'> '; color:rgba(0,255,136,0.3); }
+  .metric-val { font-family:var(--font-ui); font-size:11px; font-weight:700; color:var(--neon); text-shadow:0 0 8px rgba(0,255,136,0.4); }
+  .metric-val.red  { color:var(--red); text-shadow:0 0 8px rgba(255,51,102,0.4); }
+  .metric-val.cyn  { color:var(--cyan); text-shadow:0 0 8px rgba(0,212,255,0.4); }
+  .metric-val.amb { color:var(--amber); text-shadow:0 0 8px rgba(255,170,0,0.4); }
+
+  /* ── NODE LIST ── */
+  .node-list { display:flex; flex-direction:column; gap:3px; }
+  .node-item {
+    display:flex; align-items:center; gap:6px; padding:5px 8px;
+    background:var(--surface); border:1px solid var(--border);
+    clip-path: polygon(0 5px, 5px 0, calc(100% - 5px) 0, 100% 5px, 100% calc(100% - 5px), calc(100% - 5px) 100%, 5px 100%, 0 calc(100% - 5px));
+    transition:all 0.2s;
+  }
+  .node-item:hover { background:var(--surface-hi); border-color:rgba(0,255,136,0.2); }
+  .node-dot { width:6px; height:6px; flex-shrink:0; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+  .node-dot.mal { background:var(--red); box-shadow:0 0 5px var(--red); }
+  .node-dot.ben { background:var(--neon); box-shadow:0 0 5px var(--neon); }
+  .node-name { font-size:9px; letter-spacing:0.5px; flex:1; color:var(--text); }
+  .node-bar-wrap { width:34px; height:2px; background:rgba(255,255,255,0.05); overflow:hidden; }
+  .node-bar { height:100%; }
+  .node-phero { font-family:var(--font-ui); font-size:8px; color:var(--text-lo); min-width:36px; text-align:right; }
+
+  /* ── CANVAS AREA ── */
+  #canvas-area { background:#07070e; position:relative; overflow:hidden; }
+  #mainCanvas { width:100%; height:100%; display:block; image-rendering:pixelated; image-rendering:crisp-edges; }
+
+  .corner { position:absolute; width:16px; height:16px; pointer-events:none; z-index:10; }
+  .corner.tl { top:10px; left:10px;  border-top:1px solid rgba(0,255,136,0.5); border-left:1px solid rgba(0,255,136,0.5); }
+  .corner.tr { top:10px; right:10px; border-top:1px solid rgba(0,255,136,0.5); border-right:1px solid rgba(0,255,136,0.5); }
+  .corner.bl { bottom:10px; left:10px;  border-bottom:1px solid rgba(0,255,136,0.5); border-left:1px solid rgba(0,255,136,0.5); }
+  .corner.br { bottom:10px; right:10px; border-bottom:1px solid rgba(0,255,136,0.5); border-right:1px solid rgba(0,255,136,0.5); }
+
+  .canvas-label {
+    position:absolute; top:18px; left:50%; transform:translateX(-50%);
+    font-family:var(--font-ui); font-size:7px; letter-spacing:8px;
+    color:rgba(0,255,136,0.18); pointer-events:none; text-transform:uppercase;
+  }
+
+  /* Glitch alert */
+  #alert-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; opacity:0; transition:opacity 0.3s; }
+  #alert-overlay.visible { opacity:1; }
+  .alert-box {
+    font-family:var(--font-ui); font-size:14px; font-weight:900; letter-spacing:6px; color:var(--text-hi);
+    padding:14px 32px; border:1px solid rgba(255,51,102,0.7);
+    background:rgba(10,5,15,0.92);
+    clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px));
+    text-shadow: -1px 0 rgba(255,0,255,0.6), 1px 0 rgba(0,212,255,0.6), 0 0 20px rgba(255,51,102,0.8);
+    box-shadow: 0 0 24px rgba(255,51,102,0.4), inset 0 0 24px rgba(255,51,102,0.05);
+    animation:alert-glitch 0.8s infinite;
+  }
+  @keyframes alert-glitch {
+    0%,100% { transform:translate(0); box-shadow:0 0 15px rgba(255,51,102,0.5); border-color:rgba(255,51,102,0.7); }
+    20%      { transform:translate(-2px,1px); }
+    40%      { transform:translate(2px,-1px); box-shadow:0 0 25px rgba(255,51,102,0.7); border-color:rgba(255,0,255,0.7); }
+    60%      { transform:translate(-1px,-1px); }
+    80%      { transform:translate(1px,1px); }
+  }
+
+  /* ── BOTTOM PANEL ── */
+  #bottom-panel {
+    grid-column:1/-1; background:var(--panel);
+    display:grid; grid-template-columns:160px 1fr 160px;
+    border-top:1px solid var(--border); overflow:hidden; position:relative; z-index:2;
+  }
+  #bottom-panel::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--neon), transparent); opacity:0.25;
+  }
+
+  .bottom-stat {
+    display:flex; flex-direction:column; justify-content:center;
+    padding:12px 18px; gap:4px; border-right:1px solid var(--border);
+  }
+  .bottom-stat:last-child { border-right:none; border-left:1px solid var(--border); }
+  .bstat-label { font-size:8px; letter-spacing:2px; color:var(--text-lo); text-transform:uppercase; font-family:var(--font-data); }
+  .bstat-label::before { content:'// '; color:rgba(0,255,136,0.25); }
+  .bstat-value { font-family:var(--font-ui); font-size:26px; font-weight:900; color:var(--neon); line-height:1; text-shadow:0 0 15px rgba(0,255,136,0.4), -1px 0 rgba(255,0,255,0.2), 1px 0 rgba(0,212,255,0.2); }
+  .bstat-unit  { font-size:8px; color:var(--text-lo); letter-spacing:1px; font-family:var(--font-data); }
+
+  #graph-area { padding:10px 18px; display:flex; flex-direction:column; gap:5px; }
+  .graph-title { font-family:var(--font-ui); font-size:7px; letter-spacing:5px; color:var(--text-lo); text-transform:uppercase; }
+  .graph-title::before { content:'> '; color:var(--neon); opacity:0.5; }
+  #graphCanvas { width:100%; height:108px; display:block; }
+
+  /* ── LOG ── */
+  .log-panel { display:flex; flex-direction:column; gap:2px; }
+  .log-entry { font-size:9px; letter-spacing:0.5px; padding:3px 0; border-bottom:1px solid rgba(0,255,136,0.04); display:flex; gap:8px; animation:log-slide 0.2s ease; font-family:var(--font-data); }
+  @keyframes log-slide { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+  .log-time { color:var(--text-lo); flex-shrink:0; }
+  .log-warn { color:var(--red); text-shadow:0 0 6px rgba(255,51,102,0.4); }
+  .log-info { color:var(--text); }
+  .log-ok   { color:var(--neon); text-shadow:0 0 6px rgba(0,255,136,0.4); }
+  .log-entry::before { content:'> '; color:rgba(0,255,136,0.2); flex-shrink:0; }
+
+  /* ── LEGEND ── */
+  .legend { display:flex; flex-direction:column; gap:7px; }
+  .legend-row { display:flex; align-items:center; gap:9px; font-size:9px; color:var(--text-lo); font-family:var(--font-data); }
+
+  hr { border:none; border-top:1px solid var(--border); }
+
+  @keyframes inject-pulse {
+    0%  { box-shadow:inset 0 0 0px rgba(255,51,102,0); }
+    40% { box-shadow:inset 0 0 80px rgba(255,51,102,0.2); }
+    100%{ box-shadow:inset 0 0 0px rgba(255,51,102,0); }
+  }
+  .inject-flash { animation:inject-pulse 0.9s ease; }
+
+  /* blinking cursor on section titles */
+  .blink-cursor::after {
+    content:'_'; animation:cursor-blink 1s step-end infinite; color:var(--neon);
+  }
+  @keyframes cursor-blink { 50%{opacity:0} }
+
+  /* Glitch text animation on logo */
+  @keyframes glitch-text {
+    0%,90%,100% { text-shadow: 0 0 10px rgba(0,255,136,0.4), -1px 0 rgba(255,0,255,0.3), 1px 0 rgba(0,212,255,0.3); transform:translate(0); }
+    92% { text-shadow: -2px 0 rgba(255,0,255,0.7), 2px 0 rgba(0,212,255,0.7); transform:translate(-1px,0) skewX(-2deg); }
+    94% { text-shadow: 2px 0 rgba(255,0,255,0.7), -2px 0 rgba(0,212,255,0.7); transform:translate(1px,0) skewX(1deg); }
+    96% { text-shadow: -1px 0 rgba(255,0,255,0.7), 1px 0 rgba(0,212,255,0.7); transform:translate(0); }
+  }
+  .logo-text { animation: glitch-text 6s infinite; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="logo-group">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">ACO / ANTIVIRUS</div>
+        <div class="logo-sub">NEURAL DEFENSE GRID &nbsp;v2.4.1</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-pill">ANT COLONY OPTIMIZATION</div>
+      <div id="status-chip">
+        <div id="status-dot"></div>
+        <span id="status-text">SYSTEM SECURE</span>
+      </div>
+      <div id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div class="side-panel">
+    <div class="section-head"><div class="sh-line"></div><span class="section-title blink-cursor">Parameters</span></div>
+
+    <div class="ctrl-group">
+      <div class="ctrl-label">Ant Agents <span class="ctrl-val" id="val-ants">40</span></div>
+      <input type="range" id="sl-ants" min="5" max="100" value="40">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Evaporation Rate <span class="ctrl-val" id="val-evap">0.015</span></div>
+      <input type="range" id="sl-evap" min="1" max="50" value="15">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Detection Threshold <span class="ctrl-val" id="val-thresh">60</span></div>
+      <input type="range" id="sl-thresh" min="20" max="100" value="60">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label">Malware Intensity <span class="ctrl-val" id="val-intensity">1.0×</span></div>
+      <input type="range" id="sl-intensity" min="5" max="50" value="10">
+    </div>
+
+    <hr>
+    <button class="btn btn-danger" id="btn-inject">⚡ INJECT MALWARE</button>
+    <button class="btn btn-reset"  id="btn-reset">↺ RESET SIM</button>
+    <hr>
+
+    <div class="section-head"><div class="sh-line red"></div><span class="section-title">Threat Level</span></div>
+    <div class="threat-container">
+      <div class="threat-big" id="threat-pct">0%</div>
+      <div class="threat-label-row"><span>SECURE</span><span>CRITICAL</span></div>
+      <div class="threat-track"><div id="threat-fill"></div></div>
+    </div>
+    <hr>
+
+    <div class="section-head"><div class="sh-line mag"></div><span class="section-title">Event Log</span></div>
+    <div class="log-panel" id="log-panel"></div>
+  </div>
+
+  <!-- CANVAS -->
+  <div id="canvas-area">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="canvas-label">// PROCESS TOPOLOGY MAP</div>
+    <canvas id="mainCanvas"></canvas>
+    <div id="alert-overlay">
+      <div class="alert-box">⚠ SYSTEM UNDER ATTACK</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="side-panel">
+    <div class="section-head"><div class="sh-line cyn"></div><span class="section-title">Node Monitor</span></div>
+    <div class="node-list" id="node-list"></div>
+    <hr>
+
+    <div class="section-head"><div class="sh-line"></div><span class="section-title">Colony Metrics</span></div>
+    <div class="metric-row"><span class="metric-label">Active Ants</span><span class="metric-val" id="m-ants">0</span></div>
+    <div class="metric-row"><span class="metric-label">Total Nodes</span><span class="metric-val" id="m-nodes">0</span></div>
+    <div class="metric-row"><span class="metric-label">Malicious Nodes</span><span class="metric-val red" id="m-malicious">0</span></div>
+    <div class="metric-row"><span class="metric-label">Detections</span><span class="metric-val cyn" id="m-detections">0</span></div>
+    <div class="metric-row"><span class="metric-label">Peak Pheromone Φ</span><span class="metric-val amb" id="m-maxphero">0.00</span></div>
+    <div class="metric-row"><span class="metric-label">Sim Elapsed</span><span class="metric-val" id="m-simtime">0s</span></div>
+    <hr>
+
+    <div class="section-head"><div class="sh-line mag"></div><span class="section-title">Legend</span></div>
+    <div class="legend">
+      <div class="legend-row"><div class="node-dot ben" style="width:8px;height:8px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);"></div>Benign Process Node</div>
+      <div class="legend-row"><div class="node-dot mal" style="width:8px;height:8px;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);"></div>Malicious Process Node</div>
+      <div class="legend-row"><div style="width:8px;height:8px;background:var(--magenta);box-shadow:0 0 5px var(--magenta);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);flex-shrink:0;"></div>ACO Agent (Ant)</div>
+      <div class="legend-row"><div style="width:24px;height:2px;background:linear-gradient(90deg,rgba(255,0,255,0.1),rgba(255,0,255,0.5));flex-shrink:0;"></div>Pheromone Trail</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div id="bottom-panel">
+    <div class="bottom-stat">
+      <div class="bstat-label">Avg Pheromone Density</div>
+      <div class="bstat-value" id="bv-phero">0.00</div>
+      <div class="bstat-unit">Φ / node</div>
+    </div>
+    <div id="graph-area">
+      <div class="graph-title">Resources Consumed — Threat History</div>
+      <canvas id="graphCanvas"></canvas>
+    </div>
+    <div class="bottom-stat">
+      <div class="bstat-label">Detections / sec</div>
+      <div class="bstat-value" id="bv-dps">0</div>
+      <div class="bstat-unit">events</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CFG = {
+  NODE_COUNT: 18,
+  NODE_TYPES: ['File Write','Net Access','Reg Edit','CPU Usage','Encrypt','Memory Scan','Port Scan','Proc Inject'],
+  EDGE_DIST_MAX: 225,
+  ANT_SPEED: 95,
+  ANT_TRAIL_LEN: 22,
+  PHEROMONE_DEPOSIT_BENIGN: 0.38,
+  PHEROMONE_DEPOSIT_MALICIOUS: 2.0,
+  PHEROMONE_MAX: 20,
+  EDGE_ALPHA_SCALE: 0.4,
+  TRAIL_ALPHA: 0.28,
+};
+
+let state = {
+  nodes:[], ants:[], edges:[],
+  threatHistory:[], threatScore:0, threatSmoothed:0,
+  detections:0, detPerSec:0, simTime:0,
+  detCountWindow:0, windowTimer:0, frameCount:0,
+};
+
+let params = { antCount:40, evapRate:0.015, threshold:60, malwareIntensity:1.0 };
+
+const canvas  = document.getElementById('mainCanvas');
+const ctx     = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const gCanvas = document.getElementById('graphCanvas');
+const gCtx    = gCanvas.getContext('2d');
+gCtx.imageSmoothingEnabled = false;
+
+function resizeCanvas() { const a=document.getElementById('canvas-area'); canvas.width=a.clientWidth; canvas.height=a.clientHeight; ctx.imageSmoothingEnabled=false; }
+function resizeGraph()  { const a=document.getElementById('graph-area'); gCanvas.width=a.clientWidth-36; gCanvas.height=108; gCtx.imageSmoothingEnabled=false; }
+
+class Node {
+  constructor(id,x,y,type,malicious) {
+    this.id=id; this.x=x; this.y=y; this.type=type; this.malicious=malicious;
+    this.pheromone=0.5; this.pulsePhase=Math.random()*Math.PI*2;
+    this.baseRadius=13+Math.random()*7; this.visitCount=0;
+  }
+  get radius() { return this.baseRadius + Math.min(this.pheromone/CFG.PHEROMONE_MAX,1)*9; }
+}
+
+class Ant {
+  constructor(id,node) {
+    this.id=id; this.currentNode=node; this.targetNode=null;
+    this.x=node.x; this.y=node.y; this.tx=node.x; this.ty=node.y;
+    this.progress=1; this.trail=[];
+    this.speed=CFG.ANT_SPEED*(0.7+Math.random()*0.6); this.travelTime=0;
+    this.pickNext();
+  }
+  pickNext() {
+    const reach = state.edges
+      .filter(e=>e.a===this.currentNode.id||e.b===this.currentNode.id)
+      .map(e=>e.a===this.currentNode.id ? state.nodes[e.b] : state.nodes[e.a]);
+    if (!reach.length) return;
+    const w = reach.map(n=>Math.pow(n.pheromone+0.1,2)+Math.random()*0.08);
+    const tot = w.reduce((a,b)=>a+b,0);
+    let r=Math.random()*tot, chosen=reach[reach.length-1];
+    for(let i=0;i<reach.length;i++){r-=w[i]; if(r<=0){chosen=reach[i];break;}}
+    this.targetNode=chosen;
+    const dx=chosen.x-this.x, dy=chosen.y-this.y;
+    this.travelTime=Math.sqrt(dx*dx+dy*dy)/this.speed;
+    this.progress=0; this.tx=chosen.x; this.ty=chosen.y;
+  }
+  update(dt) {
+    if (!this.targetNode) { this.pickNext(); return; }
+    this.progress += dt/Math.max(this.travelTime,0.01);
+    if (this.progress >= 1) {
+      this.progress=1; this.x=this.targetNode.x; this.y=this.targetNode.y;
+      const n=this.targetNode; n.visitCount++;
+      const dep = n.malicious ? CFG.PHEROMONE_DEPOSIT_MALICIOUS*params.malwareIntensity : CFG.PHEROMONE_DEPOSIT_BENIGN;
+      n.pheromone = Math.min(n.pheromone+dep, CFG.PHEROMONE_MAX);
+      this.currentNode=n; this.targetNode=null; this.pickNext();
+    } else {
+      const t=smoothstep(this.progress);
+      this.x=this.currentNode.x+(this.tx-this.currentNode.x)*t;
+      this.y=this.currentNode.y+(this.ty-this.currentNode.y)*t;
+    }
+    this.trail.unshift({x:this.x,y:this.y});
+    if(this.trail.length>CFG.ANT_TRAIL_LEN) this.trail.pop();
+  }
+}
+
+function smoothstep(t){return t*t*(3-2*t);}
+function dist(a,b){const dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx+dy*dy);}
+
+function init() {
+  resizeCanvas(); resizeGraph();
+  Object.assign(state,{nodes:[],ants:[],edges:[],threatHistory:[],threatScore:0,threatSmoothed:0,
+    detections:0,detPerSec:0,simTime:0,detCountWindow:0,windowTimer:0,frameCount:0});
+  const pad=90, W=canvas.width, H=canvas.height;
+  for(let i=0;i<CFG.NODE_COUNT;i++){
+    const x=pad+Math.random()*(W-pad*2), y=pad+Math.random()*(H-pad*2);
+    const type=CFG.NODE_TYPES[Math.floor(Math.random()*CFG.NODE_TYPES.length)];
+    state.nodes.push(new Node(i,x,y,type,Math.random()<0.30));
+  }
+  for(let i=0;i<state.nodes.length;i++)
+    for(let j=i+1;j<state.nodes.length;j++){
+      const d=dist(state.nodes[i],state.nodes[j]);
+      if(d<CFG.EDGE_DIST_MAX) state.edges.push({a:i,b:j,dist:d});
+    }
+  state.nodes.forEach((n,i)=>{
+    if(!state.edges.some(e=>e.a===i||e.b===i)){
+      let ni=-1,nd=Infinity;
+      state.nodes.forEach((m,j)=>{if(j!==i){const d=dist(n,m);if(d<nd){nd=d;ni=j;}}});
+      if(ni>=0) state.edges.push({a:i,b:ni,dist:nd});
+    }
+  });
+  for(let i=0;i<params.antCount;i++)
+    state.ants.push(new Ant(i,state.nodes[Math.floor(Math.random()*state.nodes.length)]));
+  updateNodeList(); updateMetrics();
+  addLog('Colony initialized. Monitoring active.','ok');
+}
+
+let lastTime=0;
+function simulate(dt) {
+  state.simTime+=dt; state.windowTimer+=dt;
+  state.nodes.forEach(n=>{
+    n.pheromone=Math.max(0.01,n.pheromone*(1-params.evapRate));
+    n.pulsePhase+=dt*(1+n.pheromone*0.25);
+  });
+  while(state.ants.length<params.antCount)
+    state.ants.push(new Ant(state.ants.length,state.nodes[Math.floor(Math.random()*state.nodes.length)]));
+  while(state.ants.length>params.antCount) state.ants.pop();
+  state.ants.forEach(a=>a.update(dt));
+  const malN=state.nodes.filter(n=>n.malicious);
+  const sat=malN.reduce((s,n)=>s+n.pheromone,0);
+  const maxP=malN.length*CFG.PHEROMONE_MAX;
+  state.threatScore=maxP>0?(sat/maxP)*100:0;
+  // Smooth towards raw score — alpha 0.04 per frame ≈ ~1.5s lag, no jitter
+  state.threatSmoothed += (state.threatScore - state.threatSmoothed) * 0.04;
+  if(state.threatScore>params.threshold&&Math.random()<0.012){
+    state.detections++; state.detCountWindow++;
+    addLog(`Anomaly flagged — threat at ${Math.round(state.threatScore)}%`,'warn');
+  }
+  if(state.windowTimer>=1){state.detPerSec=state.detCountWindow;state.detCountWindow=0;state.windowTimer=0;}
+  if(state.frameCount%6===0){state.threatHistory.push(state.threatSmoothed);if(state.threatHistory.length>240)state.threatHistory.shift();}
+  state.frameCount++;
+}
+
+
+
+function draw() {
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // Subtle vignette — tight, not cloudy
+  const vig=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.75);
+  vig.addColorStop(0,'rgba(7,7,14,0)'); vig.addColorStop(1,'rgba(2,2,8,0.55)');
+  ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+
+  // ── EDGES — clean 1px lines, bloom only on hot connections ──
+  ctx.save();
+  state.edges.forEach(e=>{
+    const n1=state.nodes[e.a], n2=state.nodes[e.b];
+    const avgP=(n1.pheromone+n2.pheromone)/2;
+    const alpha=Math.min(avgP/CFG.PHEROMONE_MAX*0.55,0.55);
+    const isM=n1.malicious||n2.malicious;
+    const hot=avgP>CFG.PHEROMONE_MAX*0.55;
+
+    if(hot){
+      ctx.shadowBlur=4;
+      ctx.shadowColor=isM?'rgba(255,51,102,0.6)':'rgba(0,255,136,0.5)';
+    } else {
+      ctx.shadowBlur=0;
+    }
+    ctx.beginPath(); ctx.moveTo(n1.x,n1.y); ctx.lineTo(n2.x,n2.y);
+    ctx.strokeStyle=isM?`rgba(255,51,102,${alpha*0.75})`:`rgba(0,255,136,${alpha})`;
+    ctx.lineWidth=hot ? 1.5 : 0.75;
+    ctx.stroke();
+  });
+  ctx.shadowBlur=0;
+  ctx.restore();
+
+  // ── PHEROMONE TRAILS — crisp per-segment opacity fade ──
+  state.ants.forEach(ant=>{
+    const trail=ant.trail;
+    if(trail.length<2) return;
+    const total=trail.length;
+    for(let i=0;i<total-1;i++){
+      const t=trail[i], t2=trail[i+1];
+      const segAlpha=(1-(i/(total-1)))*0.5; // linear fade, max 0.5
+      ctx.beginPath(); ctx.moveTo(t.x,t.y); ctx.lineTo(t2.x,t2.y);
+      ctx.strokeStyle=`rgba(255,0,255,${segAlpha})`;
+      ctx.lineWidth=i===0?1.5:1;
+      ctx.shadowBlur=i<4?3:0;
+      ctx.shadowColor='rgba(255,0,255,0.6)';
+      ctx.stroke();
+    }
+    ctx.shadowBlur=0;
+  });
+
+  // ── NODES — clean circles with tight bloom ──
+  state.nodes.forEach(n=>{
+    const r=n.radius;
+    const intensity=Math.min(n.pheromone/CFG.PHEROMONE_MAX,1);
+    const pulse=Math.sin(n.pulsePhase)*0.5+0.5;
+    const isM=n.malicious;
+    const glowCol=isM?`rgba(255,51,102,${0.45+intensity*0.35})`:`rgba(0,255,136,${0.4+intensity*0.3})`;
+
+    // Bloom glow pass
+    ctx.save();
+    ctx.shadowBlur=14+intensity*18;
+    ctx.shadowColor=glowCol;
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.fillStyle=isM?`rgba(180,30,60,${0.12+intensity*0.1})`:`rgba(0,160,70,${0.1+intensity*0.1})`;
+    ctx.fill();
+    ctx.restore();
+
+    // Solid circle body
+    const bodyG=ctx.createLinearGradient(n.x-r,n.y-r,n.x+r,n.y+r);
+    if(isM){
+      bodyG.addColorStop(0,`rgba(240,80,115,${0.92+intensity*0.08})`);
+      bodyG.addColorStop(1,`rgba(150,20,50,0.96)`);
+    } else {
+      bodyG.addColorStop(0,`rgba(70,240,155,${0.9+intensity*0.1})`);
+      bodyG.addColorStop(1,`rgba(0,130,65,0.96)`);
+    }
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.fillStyle=bodyG; ctx.fill();
+
+    // Crisp 1px border
+    ctx.save();
+    ctx.shadowBlur=intensity>0.4?6:0;
+    ctx.shadowColor=glowCol;
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,Math.PI*2);
+    ctx.strokeStyle=isM?`rgba(255,51,102,${0.55+intensity*0.45})`:`rgba(0,255,136,${0.55+intensity*0.45})`;
+    ctx.lineWidth=1; ctx.stroke();
+    ctx.restore();
+
+    // Slow pulse ring
+    if(intensity>0.15){
+      ctx.beginPath(); ctx.arc(n.x,n.y,r+8+pulse*8,0,Math.PI*2);
+      ctx.strokeStyle=isM
+        ?`rgba(255,51,102,${intensity*pulse*0.35})`
+        :`rgba(0,255,136,${intensity*pulse*0.28})`;
+      ctx.lineWidth=1; ctx.stroke();
+    }
+
+    // Dashed outer ring for hot nodes
+    if(intensity>0.6){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(n.x,n.y,r+20+pulse*4,0,Math.PI*2);
+      ctx.strokeStyle=isM
+        ?`rgba(255,0,255,${intensity*0.18})`
+        :`rgba(0,212,255,${intensity*0.15})`;
+      ctx.lineWidth=0.5; ctx.setLineDash([4,6]); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+    }
+
+    // Labels
+    ctx.save();
+    ctx.shadowBlur=0;
+    ctx.font='bold 9px "Fira Code","JetBrains Mono",monospace';
+    ctx.fillStyle=isM?'rgba(255,190,190,0.88)':'rgba(160,255,210,0.88)';
+    ctx.textAlign='center';
+    ctx.fillText(n.type.toUpperCase(),n.x,n.y+r+15);
+    ctx.font='8px "Fira Code","JetBrains Mono",monospace';
+    ctx.fillStyle=isM
+      ?`rgba(255,100,130,${0.3+intensity*0.5})`
+      :`rgba(0,255,136,${0.3+intensity*0.5})`;
+    ctx.fillText('Φ '+n.pheromone.toFixed(1),n.x,n.y+r+26);
+    ctx.restore();
+  });
+
+  // ── ANTS — sharp 3px core + crisp bloom ring ──
+  state.ants.forEach(ant=>{
+    const {x,y}=ant;
+
+    // Bloom halo — tight, single pass
+    ctx.save();
+    ctx.shadowBlur=10;
+    ctx.shadowColor='rgba(255,0,255,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(x,y-5); ctx.lineTo(x+5,y); ctx.lineTo(x,y+5); ctx.lineTo(x-5,y);
+    ctx.closePath();
+    ctx.fillStyle='rgba(255,0,255,0.18)';
+    ctx.fill();
+    ctx.restore();
+
+    // Sharp core diamond — 3px, fully opaque
+    ctx.save();
+    ctx.shadowBlur=4;
+    ctx.shadowColor='rgba(255,0,255,0.9)';
+    ctx.beginPath();
+    ctx.moveTo(x,y-3); ctx.lineTo(x+3,y); ctx.lineTo(x,y+3); ctx.lineTo(x-3,y);
+    ctx.closePath();
+    ctx.fillStyle='#ff44ff';
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawGraph() {
+  const w=gCanvas.width, h=gCanvas.height;
+  gCtx.clearRect(0,0,w,h);
+  gCtx.fillStyle='rgba(5,5,14,0.85)'; gCtx.fillRect(0,0,w,h);
+
+  // Grid — sharp 1px lines at low opacity
+  gCtx.strokeStyle='rgba(0,255,136,0.07)'; gCtx.lineWidth=1;
+  for(let i=1;i<4;i++){const y=Math.round((i/4)*h)+0.5; gCtx.beginPath(); gCtx.moveTo(0,y); gCtx.lineTo(w,y); gCtx.stroke();}
+  for(let i=1;i<8;i++){const x=Math.round((i/8)*w)+0.5; gCtx.beginPath(); gCtx.moveTo(x,0); gCtx.lineTo(x,h); gCtx.stroke();}
+
+  const hist=state.threatHistory;
+  if(hist.length<2) return;
+
+  // Threshold line — amber, sharp
+  const tY=Math.round(h-(params.threshold/100)*h)+0.5;
+  gCtx.beginPath(); gCtx.moveTo(0,tY); gCtx.lineTo(w,tY);
+  gCtx.strokeStyle='rgba(255,170,0,0.65)'; gCtx.setLineDash([4,6]); gCtx.lineWidth=1; gCtx.stroke(); gCtx.setLineDash([]);
+
+  const threatened=state.threatSmoothed>params.threshold;
+  const lC=threatened?'rgba(255,51,102,1)':'rgba(0,255,136,1)';
+  const fT=threatened?'rgba(255,51,102,0.12)':'rgba(0,255,136,0.1)';
+
+  // Fill area — very subtle
+  const fg=gCtx.createLinearGradient(0,0,0,h);
+  fg.addColorStop(0,fT); fg.addColorStop(0.8,'rgba(0,0,0,0)');
+  gCtx.beginPath(); gCtx.moveTo(0,h);
+  hist.forEach((v,i)=>gCtx.lineTo((i/(hist.length-1))*w, h-(v/100)*h));
+  gCtx.lineTo(w,h); gCtx.closePath(); gCtx.fillStyle=fg; gCtx.fill();
+
+  // Crisp line with glow
+  gCtx.save();
+  gCtx.shadowBlur=6;
+  gCtx.shadowColor=threatened?'rgba(255,51,102,0.8)':'rgba(0,255,136,0.7)';
+  gCtx.beginPath();
+  hist.forEach((v,i)=>{const x=(i/(hist.length-1))*w, y=h-(v/100)*h; i===0?gCtx.moveTo(x,y):gCtx.lineTo(x,y);});
+  gCtx.strokeStyle=lC; gCtx.lineWidth=1.5; gCtx.stroke();
+  gCtx.restore();
+}
+
+function updateUI() {
+  const pct=Math.min(state.threatSmoothed,100);
+  const fill=document.getElementById('threat-fill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>params.threshold?'var(--red)':pct>params.threshold*0.6?'var(--amber)':'var(--neon)';
+  fill.style.boxShadow=pct>params.threshold?'0 0 10px var(--red)':pct>params.threshold*0.6?'0 0 8px var(--amber)':'0 0 8px var(--neon)';
+
+  const tp=document.getElementById('threat-pct');
+  tp.textContent=Math.round(pct)+'%';
+  if(pct>params.threshold){
+    tp.style.color='var(--red)';
+    tp.style.textShadow='0 0 20px rgba(255,51,102,0.7), -2px 0 rgba(255,0,255,0.5), 2px 0 rgba(0,212,255,0.5)';
+  } else if(pct>params.threshold*0.6){
+    tp.style.color='var(--amber)';
+    tp.style.textShadow='0 0 15px rgba(255,170,0,0.5), -1px 0 rgba(255,0,255,0.2), 1px 0 rgba(0,212,255,0.2)';
+  } else {
+    tp.style.color='var(--text-hi)';
+    tp.style.textShadow='0 0 15px rgba(0,255,136,0.4), -1px 0 rgba(255,0,255,0.2), 1px 0 rgba(0,212,255,0.2)';
+  }
+
+  const chip=document.getElementById('status-chip');
+  const dot=document.getElementById('status-dot');
+  const txt=document.getElementById('status-text');
+  if(pct>params.threshold){
+    chip.style.borderColor='rgba(255,51,102,0.5)'; chip.style.background='var(--red-lo)';
+    chip.style.boxShadow='0 0 12px rgba(255,51,102,0.25)';
+    dot.style.background='var(--red)'; dot.style.boxShadow='0 0 8px var(--red)';
+    txt.style.color='var(--red)'; txt.textContent='UNDER ATTACK';
+  } else {
+    chip.style.borderColor='rgba(0,255,136,0.4)'; chip.style.background='var(--neon-lo)';
+    chip.style.boxShadow='0 0 8px rgba(0,255,136,0.15)';
+    dot.style.background='var(--neon)'; dot.style.boxShadow='0 0 8px var(--neon)';
+    txt.style.color='var(--neon)'; txt.textContent='SYSTEM SECURE';
+  }
+  document.getElementById('alert-overlay').classList.toggle('visible',pct>params.threshold);
+  const avgP=state.nodes.reduce((s,n)=>s+n.pheromone,0)/Math.max(state.nodes.length,1);
+  document.getElementById('bv-phero').textContent=avgP.toFixed(2);
+  document.getElementById('bv-dps').textContent=state.detPerSec;
+}
+
+function updateMetrics() {
+  document.getElementById('m-ants').textContent=state.ants.length;
+  document.getElementById('m-nodes').textContent=state.nodes.length;
+  document.getElementById('m-malicious').textContent=state.nodes.filter(n=>n.malicious).length;
+  document.getElementById('m-detections').textContent=state.detections;
+  document.getElementById('m-maxphero').textContent=Math.max(...state.nodes.map(n=>n.pheromone)).toFixed(2);
+  document.getElementById('m-simtime').textContent=Math.round(state.simTime)+'s';
+}
+
+function updateNodeList() {
+  const list=document.getElementById('node-list');
+  list.innerHTML='';
+  [...state.nodes].sort((a,b)=>b.pheromone-a.pheromone).slice(0,10).forEach(n=>{
+    const barPct=(n.pheromone/CFG.PHEROMONE_MAX*100).toFixed(0);
+    const barC=n.pheromone>12?'var(--red)':n.pheromone>6?'var(--amber)':'var(--neon)';
+    const nameC=n.malicious?'rgba(255,160,160,0.9)':'rgba(130,255,190,0.9)';
+    const pheroC=n.pheromone>10?'var(--red)':n.pheromone>5?'var(--amber)':'var(--text-lo)';
+    const item=document.createElement('div'); item.className='node-item';
+    item.innerHTML=`
+      <div class="node-dot ${n.malicious?'mal':'ben'}"></div>
+      <span class="node-name" style="color:${nameC}">${n.type}</span>
+      <div class="node-bar-wrap"><div class="node-bar" style="width:${barPct}%;background:${barC};box-shadow:0 0 4px ${barC};"></div></div>
+      <span class="node-phero" style="color:${pheroC}">Φ${n.pheromone.toFixed(1)}</span>`;
+    list.appendChild(item);
+  });
+}
+
+let logEntries=[];
+function addLog(msg,type='info') {
+  const panel=document.getElementById('log-panel');
+  const time=new Date().toTimeString().slice(0,8);
+  const entry=document.createElement('div'); entry.className='log-entry';
+  entry.innerHTML=`<span class="log-time">${time}</span><span class="log-${type}">${msg}</span>`;
+  panel.insertBefore(entry,panel.firstChild);
+  logEntries.push(entry);
+  if(logEntries.length>10){const old=logEntries.shift();old.parentNode?.removeChild(old);}
+}
+
+function updateClock() { document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8); }
+
+let uiTimer=0,nodeTimer=0;
+function loop(ts) {
+  const dt=Math.min((ts-lastTime)/1000,0.05); lastTime=ts;
+  simulate(dt); draw(); drawGraph();
+  uiTimer+=dt; if(uiTimer>0.1){updateUI();updateMetrics();updateClock();uiTimer=0;}
+  nodeTimer+=dt; if(nodeTimer>0.5){updateNodeList();nodeTimer=0;}
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('sl-ants').addEventListener('input',function(){params.antCount=+this.value;document.getElementById('val-ants').textContent=this.value;});
+document.getElementById('sl-evap').addEventListener('input',function(){params.evapRate=this.value/1000;document.getElementById('val-evap').textContent=params.evapRate.toFixed(3);});
+document.getElementById('sl-thresh').addEventListener('input',function(){params.threshold=+this.value;document.getElementById('val-thresh').textContent=this.value;});
+document.getElementById('sl-intensity').addEventListener('input',function(){params.malwareIntensity=this.value/10;document.getElementById('val-intensity').textContent=params.malwareIntensity.toFixed(1)+'×';});
+
+document.getElementById('btn-inject').addEventListener('click',function(){
+  state.nodes.filter(n=>n.malicious).forEach(n=>{n.pheromone=Math.min(n.pheromone+9,CFG.PHEROMONE_MAX);});
+  const rnd=state.nodes[Math.floor(Math.random()*state.nodes.length)];
+  rnd.malicious=true; rnd.pheromone=CFG.PHEROMONE_MAX*0.75;
+  addLog('⚡ Malware payload injected — pheromone surge detected.','warn');
+  document.getElementById('canvas-area').classList.add('inject-flash');
+  setTimeout(()=>document.getElementById('canvas-area').classList.remove('inject-flash'),900);
+});
+
+document.getElementById('btn-reset').addEventListener('click',function(){
+  addLog('Simulation reset. Rebuilding topology.','ok'); init();
+});
+
+window.addEventListener('resize',()=>{resizeCanvas();resizeGraph();init();});
+window.addEventListener('load',()=>{resizeCanvas();resizeGraph();init();lastTime=performance.now();requestAnimationFrame(loop);});
+</script>
+</body>
+</html>

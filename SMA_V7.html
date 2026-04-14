@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHYSARUM://TRANSPORT_NETWORK_v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+:root {
+  --bg:      #050508;
+  --card:    #12121a;
+  --muted:   #1c1c2e;
+  --fg:      #e0e0e0;
+  --fgm:     #6b7280;
+  --acc:     #00ff88;
+  --acc2:    #ff00ff;
+  --acc3:    #00d4ff;
+  --warn:    #ffaa00;
+  --danger:  #ff3366;
+  --bdr:     #2a2a3a;
+
+  --glow:    0 0 5px var(--acc),  0 0 12px rgba(0,255,136,.4);
+  --glow-sm: 0 0 3px var(--acc),  0 0  6px rgba(0,255,136,.3);
+  --glow-lg: 0 0 10px var(--acc), 0 0 22px rgba(0,255,136,.6), 0 0 44px rgba(0,255,136,.3);
+  --glow2:   0 0 5px var(--acc2), 0 0 20px rgba(255,0,255,.6);
+  --glow3:   0 0 5px var(--acc3), 0 0 20px rgba(0,212,255,.6);
+
+  --chsm: polygon(0 4px,4px 0,calc(100% - 4px) 0,100% 4px,100% calc(100% - 4px),calc(100% - 4px) 100%,4px 100%,0 calc(100% - 4px));
+  --ch:   polygon(0 10px,10px 0,calc(100% - 10px) 0,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0 calc(100% - 10px));
+  --fhd:  'Orbitron','Share Tech Mono',monospace;
+  --fbd:  'JetBrains Mono',Consolas,monospace;
+  --flb:  'Share Tech Mono',monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+body{font-family:var(--fbd);background:var(--bg);color:var(--fg);height:100vh;overflow:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.055) 2px,rgba(0,0,0,.055) 4px);pointer-events:none;z-index:9999}
+
+/* ── Animations ── */
+@keyframes blink     {50%{opacity:0}}
+@keyframes pglow     {0%,100%{box-shadow:var(--glow)}50%{box-shadow:var(--glow-lg)}}
+@keyframes flicker   {0%,100%{opacity:1}92%{opacity:1}93%{opacity:.65}94%{opacity:1}}
+@keyframes fadeIn    {from{opacity:0;transform:translate(-50%,-50%) scale(.9)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes fadeOut   {from{opacity:1}to{opacity:0}}
+
+/* ── Layout ── */
+.app {display:flex;flex-direction:column;height:100vh}
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ── Header ── */
+.hdr{
+  background:var(--card);border-bottom:1px solid var(--bdr);
+  padding:.65rem 1.1rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.7rem;
+  position:relative;z-index:100;
+}
+.hdr::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--acc),var(--acc2),var(--acc3),transparent);
+  opacity:.5;
+}
+.logo-row{display:flex;align-items:center;gap:.65rem}
+.logo-icon{
+  width:32px;height:32px;border:2px solid var(--acc);clip-path:var(--chsm);
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,255,136,.08);box-shadow:var(--glow-sm);
+  animation:pglow 3s ease-in-out infinite;
+}
+.logo-icon svg{width:16px;height:16px;stroke:var(--acc)}
+.ttl{font-family:var(--fhd);font-size:.95rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--acc);text-shadow:0 0 10px rgba(0,255,136,.5);animation:flicker 5s infinite}
+.sub{font-family:var(--flb);font-size:.55rem;color:var(--fgm);letter-spacing:.14em}
+.hstats{display:flex;gap:1.2rem}
+.hs{display:flex;flex-direction:column;align-items:flex-end}
+.hs-l{font-family:var(--flb);font-size:.46rem;color:var(--fgm);text-transform:uppercase;letter-spacing:.1em}
+.hs-v{font-family:var(--fhd);font-size:.88rem;font-weight:700;color:var(--acc);text-shadow:var(--glow-sm)}
+.hs-v.s2{color:var(--acc2);text-shadow:0 0 5px var(--acc2)}
+.hs-v.s3{color:var(--acc3);text-shadow:0 0 5px var(--acc3)}
+.hs-v.sw{color:var(--warn);text-shadow:0 0 5px var(--warn)}
+
+/* ── Canvas ── */
+.csec{flex:1;position:relative;overflow:hidden;background:var(--bg)}
+.cwrap{position:absolute;inset:0}
+#sim-canvas{display:block;width:100%;height:100%;background:#000;cursor:crosshair}
+
+/* Frame corners */
+.cf{position:absolute;inset:0;pointer-events:none;z-index:10}
+.fc{position:absolute;width:44px;height:44px}
+.fc::before,.fc::after{content:'';position:absolute;background:var(--acc);opacity:.4}
+.fc.tl{top:7px;left:7px}.fc.tl::before{top:0;left:0;width:2px;height:26px}.fc.tl::after{top:0;left:0;width:26px;height:2px}
+.fc.tr{top:7px;right:7px}.fc.tr::before{top:0;right:0;width:2px;height:26px}.fc.tr::after{top:0;right:0;width:26px;height:2px}
+.fc.bl{bottom:7px;left:7px}.fc.bl::before{bottom:0;left:0;width:2px;height:26px}.fc.bl::after{bottom:0;left:0;width:26px;height:2px}
+.fc.br{bottom:7px;right:7px}.fc.br::before{bottom:0;right:0;width:2px;height:26px}.fc.br::after{bottom:0;right:0;width:26px;height:2px}
+
+/* HUD */
+.hud{position:absolute;font-family:var(--flb);font-size:.6rem;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;opacity:.8;pointer-events:none;z-index:20}
+.hud.tl{top:13px;left:13px}.hud.tr{top:13px;right:13px;text-align:right}
+.hud-line{margin-bottom:.2rem;display:flex;align-items:center;gap:.4rem}
+.hud-line::before{content:'>';animation:blink 1s step-end infinite}
+.hud-val{color:var(--fg);font-family:var(--fbd)}
+
+/* Hints */
+.hints{
+  position:absolute;bottom:13px;right:13px;
+  background:rgba(18,18,26,.9);border:1px solid var(--bdr);
+  clip-path:var(--chsm);padding:.58rem .82rem;
+  font-family:var(--flb);font-size:.54rem;
+  text-transform:uppercase;letter-spacing:.05em;z-index:20;
+}
+.hr2{display:flex;align-items:center;gap:.65rem;margin-bottom:.26rem}
+.hr2:last-child{margin-bottom:0}
+.hk{background:var(--muted);padding:.16rem .34rem;border:1px solid var(--bdr);color:var(--acc);min-width:52px;text-align:center}
+.ha{color:var(--fgm)}
+
+/* Phase announcement */
+#phase-ann{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:var(--fhd);font-size:.95rem;font-weight:900;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--acc);text-shadow:var(--glow-lg);
+  background:rgba(5,5,8,.9);border:1px solid var(--acc);
+  clip-path:var(--chsm);padding:.72rem 1.45rem;
+  pointer-events:none;z-index:50;
+  opacity:0;transition:opacity .5s;white-space:nowrap;
+}
+
+/* ── Sidebar ── */
+.sb{
+  width:282px;background:var(--card);border-left:1px solid var(--bdr);
+  overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;z-index:100;
+}
+.sb::-webkit-scrollbar{width:4px}
+.sb::-webkit-scrollbar-track{background:var(--muted)}
+.sb::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+.sb::-webkit-scrollbar-thumb:hover{background:var(--acc)}
+
+@media(max-width:900px){
+  .main{flex-direction:column}
+  .csec{flex:1;min-height:50vh}
+  .sb{width:100%;border-left:none;border-top:1px solid var(--bdr);max-height:42vh}
+  .hstats{display:none}
+}
+
+.ps{padding:.82rem;border-bottom:1px solid var(--bdr)}
+.ps:last-child{border-bottom:none}
+.pt{font-family:var(--fhd);font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--acc);margin-bottom:.72rem;display:flex;align-items:center;gap:.42rem}
+.pt::before{content:'//';color:var(--fgm)}
+
+/* Status bar */
+.sbar{display:flex;align-items:center;gap:.55rem;padding:.5rem .75rem;background:var(--muted);clip-path:var(--chsm);margin-bottom:.72rem}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--fgm);flex-shrink:0}
+.sdot.on{background:var(--acc);box-shadow:var(--glow-sm);animation:pglow 2s ease-in-out infinite}
+.sdot.pause{background:#fbbf24;box-shadow:0 0 5px #fbbf24}
+.stext{font-family:var(--flb);font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--fg)}
+.sfps{margin-left:auto;font-family:var(--fbd);font-size:.6rem;color:var(--acc3)}
+
+/* Buttons */
+.bg{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}
+.bg .btn{width:100%}
+.bf{grid-column:span 2}
+.btn{
+  font-family:var(--fbd);font-size:.66rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;
+  padding:.5rem .82rem;border:2px solid var(--acc);
+  background:transparent;color:var(--acc);
+  clip-path:var(--chsm);cursor:pointer;
+  transition:all 150ms ease;
+  display:flex;align-items:center;justify-content:center;gap:.3rem;
+  position:relative;overflow:hidden;
+}
+.btn::before{content:'';position:absolute;inset:0;background:var(--acc);opacity:0;transition:opacity 150ms}
+.btn span{position:relative;z-index:1}
+.btn:hover{color:var(--bg);box-shadow:var(--glow)}.btn:hover::before{opacity:1}
+.btn:active{transform:scale(.97)}
+.btn.s2{border-color:var(--acc2);color:var(--acc2)}.btn.s2::before{background:var(--acc2)}.btn.s2:hover{box-shadow:var(--glow2);color:var(--bg)}
+.btn.s3{border-color:var(--acc3);color:var(--acc3)}.btn.s3::before{background:var(--acc3)}.btn.s3:hover{box-shadow:var(--glow3);color:var(--bg)}
+.btn.danger{border-color:var(--danger);color:var(--danger)}.btn.danger::before{background:var(--danger)}.btn.danger:hover{box-shadow:0 0 10px var(--danger);color:#fff}
+.btn.warn{border-color:var(--warn);color:var(--warn)}.btn.warn::before{background:var(--warn)}.btn.warn:hover{box-shadow:0 0 10px var(--warn);color:var(--bg)}
+.btn.glitch{background:var(--acc);color:var(--bg)}.btn.glitch:hover{filter:brightness(1.1);box-shadow:var(--glow-lg);color:var(--bg)}
+
+/* Tools */
+.tsel{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem}
+.tbtn{font-family:var(--flb);font-size:.5rem;padding:.4rem .3rem;background:var(--muted);border:1px solid var(--bdr);color:var(--fg);clip-path:var(--chsm);cursor:pointer;text-transform:uppercase;letter-spacing:.03em;transition:all 150ms;text-align:center}
+.tbtn:hover{border-color:var(--acc);color:var(--acc)}
+.tbtn.active      {background:rgba(0,255,136,.14); border-color:var(--acc); color:var(--acc)}
+.tbtn.active.food {background:rgba(255,0,255,.14); border-color:var(--acc2);color:var(--acc2)}
+.tbtn.active.wall {background:rgba(255,51,102,.14);border-color:var(--danger);color:var(--danger)}
+.tbtn.active.rep  {background:rgba(255,170,0,.14); border-color:var(--warn);color:var(--warn)}
+
+/* Sliders */
+.cg{margin-bottom:.72rem}.cg:last-child{margin-bottom:0}
+.cl{display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem;font-family:var(--flb);font-size:.54rem;text-transform:uppercase;letter-spacing:.06em;color:var(--fgm)}
+.cl::before{content:'>';color:var(--acc);margin-right:.28rem;font-size:.5rem}
+.cv{font-family:var(--fbd);color:var(--acc);font-weight:600;font-size:.6rem}
+.ch{font-size:.48rem;color:var(--fgm);margin-top:.14rem;font-style:italic}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--muted);border:1px solid var(--bdr);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--acc);clip-path:var(--chsm);cursor:pointer;box-shadow:var(--glow);transition:box-shadow 150ms}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:var(--glow-lg)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;background:var(--acc);border:none;cursor:pointer}
+
+/* Progress */
+.pw{height:5px;background:var(--muted);border:1px solid var(--bdr);overflow:hidden;margin-top:.3rem}
+.pf{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s;box-shadow:0 0 6px var(--acc)}
+
+/* Food dots */
+.fdots{display:flex;flex-wrap:wrap;gap:.32rem;margin-top:.35rem}
+.fdot{width:12px;height:12px;border-radius:50%;border:1px solid var(--bdr);background:var(--muted);transition:all .5s;flex-shrink:0}
+.fdot.connected{background:var(--acc2);border-color:var(--acc2);box-shadow:0 0 7px var(--acc2)}
+
+/* Mini stats */
+.mstats{display:grid;grid-template-columns:repeat(2,1fr);gap:.38rem}
+.mst{background:var(--bg);padding:.4rem .46rem;clip-path:var(--chsm);border:1px solid var(--bdr)}
+.mst-l{font-family:var(--flb);font-size:.42rem;text-transform:uppercase;letter-spacing:.1em;color:var(--fgm)}
+.mst-v{font-family:var(--fhd);font-size:.9rem;font-weight:700;color:var(--acc)}
+.mst-v.s2{color:var(--acc2)}.mst-v.s3{color:var(--acc3)}
+
+/* Legend */
+.legend{display:flex;flex-direction:column;gap:.28rem}
+.leg{display:flex;align-items:center;gap:.4rem;font-size:.54rem;color:var(--fgm)}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Osc canvas */
+.oscw{height:34px;background:var(--muted);border:1px solid var(--bdr);clip-path:var(--chsm);margin-top:.35rem;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo-row">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="8"/>
+        <path d="M12 4v4M12 16v4M4 12h4M16 12h4"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="ttl">PHYSARUM://TRANSPORT_NETWORK_v5</h1>
+      <p class="sub">BFS PATHFINDING · GUARANTEED CONNECTIVITY · LAPLACIAN SMOOTHING · GLOBAL FLUX</p>
+    </div>
+  </div>
+  <div class="hstats">
+    <div class="hs"><span class="hs-l">Tips</span>     <span class="hs-v"    id="hs-tips">0</span></div>
+    <div class="hs"><span class="hs-l">Connected</span><span class="hs-v s2" id="hs-conn">0/0</span></div>
+    <div class="hs"><span class="hs-l">Depth</span>    <span class="hs-v s3" id="hs-depth">0</span></div>
+    <div class="hs"><span class="hs-l">Coverage</span> <span class="hs-v sw" id="hs-cov">0%</span></div>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- CANVAS -->
+<section class="csec">
+  <div class="cwrap">
+    <canvas id="sim-canvas"></canvas>
+    <div class="cf">
+      <div class="fc tl"></div><div class="fc tr"></div>
+      <div class="fc bl"></div><div class="fc br"></div>
+    </div>
+    <div class="hud tl">
+      <div class="hud-line">STATUS: <span class="hud-val" id="hud-s">READY</span></div>
+      <div class="hud-line">PHASE:  <span class="hud-val" id="hud-p">GROWTH</span></div>
+      <div class="hud-line">FLUX:   <span class="hud-val" id="hud-f">OFF</span></div>
+    </div>
+    <div class="hud tr">
+      <div class="hud-line">FPS:   <span class="hud-val" id="hud-fps">0</span></div>
+      <div class="hud-line">FRAME: <span class="hud-val" id="hud-fr">0</span></div>
+    </div>
+    <div class="hints">
+      <div class="hr2"><span class="hk">CLICK</span>  <span class="ha">Place selected tool</span></div>
+      <div class="hr2"><span class="hk">DRAG</span>   <span class="ha">Draw walls / repellent</span></div>
+      <div class="hr2"><span class="hk">R-CLICK</span><span class="ha">Remove element</span></div>
+    </div>
+    <div id="phase-ann"></div>
+  </div>
+</section>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+
+  <!-- Controls -->
+  <div class="ps">
+    <div class="sbar">
+      <div class="sdot" id="sdot"></div>
+      <span class="stext" id="stext">IDLE</span>
+      <span class="sfps"  id="sfps">0 FPS</span>
+    </div>
+    <div class="bg">
+      <button class="btn glitch" id="btn-start"><span>▶ Start</span></button>
+      <button class="btn s2"     id="btn-pause"><span>⏸ Pause</span></button>
+      <button class="btn s3 bf"  id="btn-reset"><span>↻ Reset</span></button>
+    </div>
+  </div>
+
+  <!-- Tools -->
+  <div class="ps">
+    <h3 class="pt">Drawing Tools</h3>
+    <div class="tsel">
+      <button class="tbtn active food" data-tool="food">+ Food</button>
+      <button class="tbtn wall"        data-tool="wall">▣ Wall</button>
+      <button class="tbtn rep"         data-tool="rep" >⊖ Repel</button>
+    </div>
+    <div class="cg" style="margin-top:.6rem">
+      <label class="cl"><span>Brush Size</span><span class="cv" id="v-brush">15px</span></label>
+      <input type="range" id="s-brush" min="3" max="60" value="15" step="1">
+    </div>
+    <div class="bg">
+      <button class="btn danger" id="btn-clrW"><span>Clear Walls</span></button>
+      <button class="btn warn"   id="btn-clrR"><span>Clear Repel</span></button>
+    </div>
+  </div>
+
+  <!-- Connectivity display -->
+  <div class="ps">
+    <h3 class="pt">Network Connectivity</h3>
+    <div class="fdots" id="fdots"></div>
+    <div class="pw" style="margin-top:.45rem"><div class="pf" id="conn-fill" style="width:0%"></div></div>
+    <p class="ch" style="margin-top:.3rem">● = food node with guaranteed BFS-confirmed path to source</p>
+  </div>
+
+  <!-- Phase I -->
+  <div class="ps">
+    <h3 class="pt">Phase I — Organic Growth</h3>
+    <div class="cg">
+      <label class="cl"><span>Growth Speed</span><span class="cv" id="v-speed">0.40px</span></label>
+      <input type="range" id="s-speed" min="0.05" max="2.5" value="0.40" step="0.05">
+      <p class="ch">px/frame each tip advances</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Branching Rate</span><span class="cv" id="v-branch">0.030</span></label>
+      <input type="range" id="s-branch" min="0.002" max="0.12" value="0.030" step="0.002">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Branch Angle °</span><span class="cv" id="v-angle">30°</span></label>
+      <input type="range" id="s-angle" min="10" max="70" value="30" step="1">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Wiggle Amplitude</span><span class="cv" id="v-wigA">0.15</span></label>
+      <input type="range" id="s-wigA" min="0" max="0.6" value="0.15" step="0.01">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Wiggle Frequency</span><span class="cv" id="v-wigF">0.18</span></label>
+      <input type="range" id="s-wigF" min="0.02" max="0.8" value="0.18" step="0.02">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Max Tips</span><span class="cv" id="v-maxA">2000</span></label>
+      <input type="range" id="s-maxA" min="200" max="8000" value="2000" step="100">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Max Depth</span><span class="cv" id="v-maxD">14</span></label>
+      <input type="range" id="s-maxD" min="3" max="24" value="14" step="1">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Food Attraction</span><span class="cv" id="v-foodA">0.10</span></label>
+      <input type="range" id="s-foodA" min="0" max="0.5" value="0.10" step="0.01">
+      <p class="ch">Weighted steering toward all unreached food</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Sensor Range</span><span class="cv" id="v-sense">180px</span></label>
+      <input type="range" id="s-sense" min="20" max="600" value="180" step="10">
+    </div>
+  </div>
+
+  <!-- Phase II -->
+  <div class="ps">
+    <h3 class="pt">Phase II — Optimization</h3>
+    <div class="cg">
+      <label class="cl"><span>Persistence</span><span class="cv" id="v-persist">0.72</span></label>
+      <input type="range" id="s-persist" min="0" max="1" value="0.72" step="0.01">
+      <div class="pw"><div class="pf" id="persist-fill" style="width:72%"></div></div>
+      <p class="ch">0 = fast fade · 1 = near-permanent veins</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Base Decay</span><span class="cv" id="v-decay">0.987</span></label>
+      <input type="range" id="s-decay" min="0.88" max="0.9998" value="0.987" step="0.0002">
+      <p class="ch">Multiplicative per frame — never flat subtraction</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Vein Threshold</span><span class="cv" id="v-thresh">50</span></label>
+      <input type="range" id="s-thresh" min="10" max="180" value="50" step="5">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Vein Decay Ratio</span><span class="cv" id="v-veinR">0.28</span></label>
+      <input type="range" id="s-veinR" min="0.01" max="0.99" value="0.28" step="0.01">
+      <p class="ch">Lower = veins persist much longer than scouts</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Deposit Amount</span><span class="cv" id="v-dep">7</span></label>
+      <input type="range" id="s-dep" min="1" max="30" value="7" step="1">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Diffusion</span><span class="cv" id="v-diff">0.06</span></label>
+      <input type="range" id="s-diff" min="0" max="0.5" value="0.06" step="0.01">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Vein Rigidity</span><span class="cv" id="v-rigid">0.20</span></label>
+      <input type="range" id="s-rigid" min="0" max="0.9" value="0.20" step="0.01">
+      <p class="ch">Laplacian smoothing — pulls curved paths straight</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Flux Amplitude</span><span class="cv" id="v-flux">4.0</span></label>
+      <input type="range" id="s-flux" min="0" max="14" value="4.0" step="0.5">
+      <p class="ch">Nutrient pulse strength along confirmed veins</p>
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Flux Frequency</span><span class="cv" id="v-fluxF">0.035</span></label>
+      <input type="range" id="s-fluxF" min="0.005" max="0.2" value="0.035" step="0.005">
+    </div>
+    <div class="cg">
+      <label class="cl"><span>Reinforce Strength</span><span class="cv" id="v-reinf">210</span></label>
+      <input type="range" id="s-reinf" min="20" max="255" value="210" step="5">
+      <p class="ch">Brightness stamped on BFS-confirmed path pixels</p>
+    </div>
+  </div>
+
+  <!-- Oscillation viz -->
+  <div class="ps">
+    <h3 class="pt">Flux Waveform</h3>
+    <div class="oscw"><canvas id="osc-canvas" width="258" height="34"></canvas></div>
+  </div>
+
+  <!-- Telemetry -->
+  <div class="ps">
+    <h3 class="pt">Telemetry</h3>
+    <div class="mstats">
+      <div class="mst"><div class="mst-l">Tips</div>    <div class="mst-v"    id="ms-tips">0</div></div>
+      <div class="mst"><div class="mst-l">Food</div>    <div class="mst-v s2" id="ms-food">0</div></div>
+      <div class="mst"><div class="mst-l">Veins</div>   <div class="mst-v s3" id="ms-veins">0</div></div>
+      <div class="mst"><div class="mst-l">Depth</div>   <div class="mst-v"    id="ms-depth">0</div></div>
+      <div class="mst"><div class="mst-l">Coverage</div><div class="mst-v"    id="ms-cov">0%</div></div>
+      <div class="mst"><div class="mst-l">Max Trail</div><div class="mst-v s2" id="ms-trail">0</div></div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="ps">
+    <h3 class="pt">Legend</h3>
+    <div class="legend">
+      <div class="leg"><div class="ldot" style="background:var(--acc3);box-shadow:0 0 5px var(--acc3)"></div>Source (root origin)</div>
+      <div class="leg"><div class="ldot" style="background:var(--acc2);box-shadow:0 0 5px var(--acc2)"></div>Food node (target)</div>
+      <div class="leg"><div class="ldot" style="background:var(--acc);box-shadow:0 0 5px var(--acc)"></div>Optimized transport vein</div>
+      <div class="leg"><div class="ldot" style="background:rgba(0,255,136,.3)"></div>Scout trail (decaying)</div>
+      <div class="leg"><div class="ldot" style="background:var(--danger)"></div>Obstacle wall</div>
+      <div class="leg"><div class="ldot" style="background:var(--warn)"></div>Repellent zone</div>
+    </div>
+  </div>
+
+</aside>
+</div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   PHYSARUM v5
+   ROOT CAUSE FIX: Food nodes fail to connect because the greedy
+   gradient-ascent backtracker loses the path when scout trails
+   decay faster than the backtracker walks.
+
+   SOLUTION — Three-layer guaranteed connectivity:
+   ①  Each growth tip carries a PARENT-INDEX CHAIN stored in a
+       flat typed array (parentOf[pixelIdx] = parentPixelIdx).
+       This is recorded as the tip moves, creating a reliable
+       breadcrumb trail that does NOT depend on trailMap values.
+
+   ②  On food hit → BFS from food pixel back to source pixel
+       using parentOf[] — O(path length), guaranteed to succeed
+       regardless of trail decay state.
+
+   ③  Every confirmed BFS path pixel is:
+       a) Stamped with reinforceStr brightness
+       b) Written to veinMap = 1
+       c) Written to confirmedVein[] = 1  (separate permanent map
+          that is NEVER erased by decay logic)
+
+   ④  confirmedVein pixels are pinned at a minimum brightness
+       floor each frame, so they can NEVER decay below visibility
+       even if baseDecay is very aggressive.
+
+   ⑤  Global flux (sine oscillator) pulses through confirmedVein
+       pixels only, creating the throbbing transport network.
+═══════════════════════════════════════════════════════════════════ */
+
+const C = {
+  bg:   [5,   5,   8  ],
+  vein: [0,   255, 136],
+  src:  [0,   212, 255],
+  food: [255, 0,   255],
+  wall: [255, 51,  102],
+  rep:  [255, 170, 0  ],
+};
+
+class Physarum {
+  constructor(canvas) {
+    this.cv  = canvas;
+    this.ctx = canvas.getContext('2d', { alpha:false, willReadFrequently:true });
+
+    this.cfg = {
+      speed       : 0.40,
+      branchRate  : 0.030,
+      branchAngle : 30,
+      wigAmp      : 0.15,
+      wigFreq     : 0.18,
+      maxAgents   : 2000,
+      maxDepth    : 14,
+      foodAttr    : 0.10,
+      sensorRange : 180,
+      baseDecay   : 0.987,
+      veinThresh  : 50,
+      veinDecayR  : 0.28,
+      deposit     : 7,
+      diffusion   : 0.06,
+      veinRigidity: 0.20,
+      fluxAmp     : 4.0,
+      fluxFreq    : 0.035,
+      reinforceStr: 210,
+      brushSize   : 15,
+    };
+
+    this.running  = false;
+    this.rafId    = null;
+    this.frame    = 0;
+    this.time     = 0;
+    this.phase    = 'growth';
+    this.maxDepth = 0;
+    this.tool     = 'food';
+    this.drawing  = false;
+    this.fps = 0; this.fpsT = performance.now(); this.fpsN = 0;
+
+    this.resize();
+    this.initWorld();
+    this.setupEvents();
+  }
+
+  /* ── Resize / alloc ──────────────────────────────────────── */
+  resize() {
+    const r = this.cv.parentElement.getBoundingClientRect();
+    const S = Math.min(900/r.width, 900/r.height, 1);
+    this.W = Math.floor(r.width  * S);
+    this.H = Math.floor(r.height * S);
+    this.cv.width  = this.W; this.cv.height = this.H;
+    this.cv.style.width  = r.width  + 'px';
+    this.cv.style.height = r.height + 'px';
+    this.sx = this.W / r.width; this.sy = this.H / r.height;
+    this._alloc();
+  }
+
+  _alloc() {
+    const N = this.W * this.H;
+    this.trailMap     = new Float32Array(N);
+    this.trailTmp     = new Float32Array(N);
+    this.wallMap      = new Uint8Array(N);
+    this.repMap       = new Float32Array(N);
+    // veinMap: 1 while intensity ≥ threshold (dynamic, can fall to 0)
+    this.veinMap      = new Uint8Array(N);
+    // confirmedVein: set permanently by BFS — NEVER cleared by decay
+    this.confirmedVein = new Uint8Array(N);
+    // parentOf: stores flat pixel index of the parent step for each pixel
+    // -1 = not yet visited by any tip, -2 = source pixel
+    this.parentOf     = new Int32Array(N).fill(-1);
+    this.imgData      = this.ctx.createImageData(this.W, this.H);
+  }
+
+  /* ── World init ──────────────────────────────────────────── */
+  initWorld() {
+    const N = this.W * this.H;
+    this.trailMap.fill(0); this.trailTmp.fill(0);
+    this.wallMap.fill(0);  this.repMap.fill(0);
+    this.veinMap.fill(0);  this.confirmedVein.fill(0);
+    this.parentOf.fill(-1);
+
+    this.source = { x: this.W/2, y: this.H/2, r: 18 };
+
+    // Mark source pixel as root of parent chain
+    const si = Math.round(this.source.y)*this.W + Math.round(this.source.x);
+    this.parentOf[si] = -2; // sentinel: "I am the root"
+
+    this.food = [];
+    this.spawnFood(6);
+    this.tips = [];
+    this.seedTips();
+
+    this.phase    = 'growth';
+    this.maxDepth = 0;
+    this.frame    = 0;
+    this.time     = 0;
+
+    this.refreshFoodUI();
+    document.getElementById('hud-p').textContent = 'GROWTH';
+    document.getElementById('hud-f').textContent = 'OFF';
+  }
+
+  spawnFood(n) {
+    const margin = 90, minD = 120;
+    for (let i = 0; i < n; i++) {
+      let x, y, d, t = 0;
+      do {
+        x = margin + Math.random()*(this.W - margin*2);
+        y = margin + Math.random()*(this.H - margin*2);
+        d = Math.hypot(x-this.source.x, y-this.source.y);
+      } while (d < minD && ++t < 80);
+      this.food.push({ x, y, r:14, connected:false, pulse:Math.random()*Math.PI*2 });
+    }
+  }
+
+  seedTips() {
+    this.tips = [];
+    const N = 12;
+    for (let i = 0; i < N; i++) {
+      const a = (i/N)*Math.PI*2;
+      this.tips.push(this.makeTip(
+        this.source.x + Math.cos(a)*2,
+        this.source.y + Math.sin(a)*2,
+        a, 0
+      ));
+    }
+  }
+
+  makeTip(x, y, angle, depth) {
+    return { x, y, angle, depth, age:0, wigPh:Math.random()*Math.PI*2 };
+  }
+
+  /* ── Food UI ─────────────────────────────────────────────── */
+  refreshFoodUI() {
+    const c = document.getElementById('fdots');
+    c.innerHTML = '';
+    this.food.forEach((f, i) => {
+      const d = document.createElement('div');
+      d.className = 'fdot' + (f.connected ? ' connected' : '');
+      d.title = `Food ${i+1}`;
+      c.appendChild(d);
+    });
+    const conn = this.food.filter(f => f.connected).length;
+    const total = this.food.length;
+    document.getElementById('ms-food').textContent  = total;
+    document.getElementById('hs-conn').textContent  = `${conn}/${total}`;
+    document.getElementById('conn-fill').style.width = total ? `${conn/total*100}%` : '0%';
+  }
+
+  /* ── Events ──────────────────────────────────────────────── */
+  setupEvents() {
+    const cv = this.cv;
+    cv.addEventListener('mousedown',   e => this.onDown(e));
+    cv.addEventListener('mousemove',   e => this.onMove(e));
+    cv.addEventListener('mouseup',     () => this.drawing = false);
+    cv.addEventListener('mouseleave',  () => this.drawing = false);
+    cv.addEventListener('contextmenu', e => { e.preventDefault(); this.onRight(e); });
+    cv.addEventListener('touchstart',  e => { e.preventDefault(); this.onDown(e.touches[0]); });
+    cv.addEventListener('touchmove',   e => { e.preventDefault(); this.onMove(e.touches[0]); });
+    cv.addEventListener('touchend',    () => this.drawing = false);
+  }
+
+  coords(e) {
+    const r = this.cv.getBoundingClientRect();
+    return { x:(e.clientX-r.left)*this.sx, y:(e.clientY-r.top)*this.sy };
+  }
+
+  onDown(e) {
+    const c = this.coords(e);
+    if (this.tool === 'food') this.addFood(c.x, c.y);
+    else { this.drawing = true; this.paintAt(c.x, c.y); }
+  }
+  onMove(e) { if (this.drawing) { const c=this.coords(e); this.paintAt(c.x,c.y); } }
+  onRight(e) {
+    const c = this.coords(e);
+    this.food = this.food.filter(f => Math.hypot(f.x-c.x,f.y-c.y) > f.r+12);
+    this.paintCircle(c.x,c.y,this.cfg.brushSize*2,'erase');
+    this.refreshFoodUI();
+  }
+
+  addFood(x, y) {
+    for (const f of this.food) if (Math.hypot(f.x-x,f.y-y) < 28) return;
+    this.food.push({ x,y,r:14,connected:false,pulse:Math.random()*Math.PI*2 });
+    this.refreshFoodUI();
+  }
+
+  paintAt(x, y) { this.paintCircle(x,y,this.cfg.brushSize,this.tool); }
+
+  paintCircle(cx, cy, r, mode) {
+    const W=this.W,H=this.H;
+    const x0=Math.max(0,Math.floor(cx-r)), x1=Math.min(W-1,Math.ceil(cx+r));
+    const y0=Math.max(0,Math.floor(cy-r)), y1=Math.min(H-1,Math.ceil(cy+r));
+    for (let py=y0; py<=y1; py++) for (let px=x0; px<=x1; px++) {
+      if (Math.hypot(px-cx,py-cy) > r) continue;
+      const i = py*W+px;
+      if (mode==='wall')  { this.wallMap[i]=1; this.trailMap[i]=0; }
+      else if (mode==='rep') this.repMap[i] = Math.max(this.repMap[i], 1-Math.hypot(px-cx,py-cy)/r);
+      else if (mode==='erase') { this.wallMap[i]=0; this.repMap[i]=0; }
+    }
+  }
+
+  clearWalls() { this.wallMap.fill(0); }
+  clearRepel() { this.repMap.fill(0); }
+  setTool(t)   { this.tool = t; }
+
+  /* ═══════════════════════════════════════════════════════
+     PHASE I — GROWTH WITH PARENT-CHAIN RECORDING
+  ═══════════════════════════════════════════════════════ */
+  updateGrowthTips() {
+    const { speed,branchRate,branchAngle,wigAmp,wigFreq,
+            maxAgents,maxDepth,foodAttr,sensorRange,deposit } = this.cfg;
+    const W=this.W, H=this.H;
+    const newTips = [];
+
+    for (let ti = this.tips.length-1; ti >= 0; ti--) {
+      const t = this.tips[ti];
+
+      // Wiggle
+      t.wigPh += wigFreq;
+      t.angle += Math.sin(t.wigPh) * wigAmp;
+
+      // Multi-target weighted steering
+      let sx=0, sy=0, sw=0;
+      for (const f of this.food) {
+        if (f.connected) continue;
+        const d = Math.hypot(t.x-f.x, t.y-f.y);
+        if (d > sensorRange) continue;
+        const w = 1/(d*d+1);
+        sx += (f.x-t.x)*w; sy += (f.y-t.y)*w; sw += w;
+      }
+      if (sw > 0 && foodAttr > 0) {
+        const sa = Math.atan2(sy/sw, sx/sw);
+        let da = sa - t.angle;
+        while (da >  Math.PI) da -= Math.PI*2;
+        while (da < -Math.PI) da += Math.PI*2;
+        t.angle += da * foodAttr;
+      }
+
+      // Move
+      const nx = t.x + Math.cos(t.angle)*speed;
+      const ny = t.y + Math.sin(t.angle)*speed;
+
+      const ix = Math.round(nx), iy = Math.round(ny);
+      if (ix<0||ix>=W||iy<0||iy>=H||this.wallMap[iy*W+ix]) {
+        this.tips.splice(ti,1); continue;
+      }
+
+      const prevIx = Math.round(t.x), prevIy = Math.round(t.y);
+      const prevPx = prevIy*W + prevIx;
+      const curPx  = iy*W + ix;
+
+      // ── RECORD PARENT CHAIN ─────────────────────────────
+      // Only write if not already visited — first writer wins.
+      // This preserves the most direct path from source.
+      if (this.parentOf[curPx] === -1) {
+        this.parentOf[curPx] = prevPx;
+      }
+
+      // Deposit trail
+      this.trailMap[curPx] = Math.min(255, this.trailMap[curPx] + deposit);
+
+      t.x = nx; t.y = ny; t.age++;
+
+      // ── FOOD HIT DETECTION → BFS CONFIRMATION ──────────
+      let hit = false;
+      for (const f of this.food) {
+        if (f.connected) continue;
+        if (Math.hypot(nx-f.x, ny-f.y) < f.r+1) {
+          f.connected = true;
+          // Stamp food area with high brightness
+          this.stampCircle(Math.round(f.x), Math.round(f.y), 8, 180, true);
+          // ── BFS BACKTRACK from food pixel to source ────
+          this.bfsReinforce(curPx);
+          this.refreshFoodUI();
+          hit = true;
+          break;
+        }
+      }
+
+      // Branching
+      const df = 1 - t.depth/(maxDepth+1);
+      if (!hit && t.depth < maxDepth &&
+          this.tips.length+newTips.length < maxAgents &&
+          Math.random() < branchRate*df) {
+        const spread = ((branchAngle+(Math.random()-.5)*10)*Math.PI)/180;
+        const L = this.makeTip(t.x,t.y, t.angle-spread, t.depth+1);
+        const R = this.makeTip(t.x,t.y, t.angle+spread, t.depth+1);
+        newTips.push(L,R);
+        if (t.depth+1 > this.maxDepth) this.maxDepth = t.depth+1;
+      }
+    }
+
+    for (const nt of newTips) this.tips.push(nt);
+
+    // Phase transition: all food connected OR timeout
+    if (this.phase === 'growth') {
+      const allConn = this.food.length>0 && this.food.every(f=>f.connected);
+      const timeout = this.frame > 9000;
+      const noTips  = this.tips.length === 0;
+      if (allConn || timeout || noTips) this.enterOptimize();
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     BFS REINFORCE — THE CORE FIX
+
+     Walk the parentOf[] chain from foodPixel back to source.
+     This is O(path_length) and guaranteed to find a path
+     because parentOf[] was built incrementally as tips moved.
+
+     Every pixel on the confirmed path receives:
+       - reinforceStr added to trailMap (bright!)
+       - veinMap[i] = 1
+       - confirmedVein[i] = 1  ← permanent, decay never clears this
+  ═══════════════════════════════════════════════════════ */
+  bfsReinforce(startPx) {
+    const { reinforceStr } = this.cfg;
+    let cur = startPx;
+    let safety = this.W*this.H; // absolute upper bound
+
+    while (cur >= 0 && safety-- > 0) {
+      this.trailMap[cur]      = Math.min(255, this.trailMap[cur] + reinforceStr);
+      this.veinMap[cur]       = 1;
+      this.confirmedVein[cur] = 1;  // permanent marker
+
+      const parent = this.parentOf[cur];
+      if (parent === -2) break;  // reached source sentinel
+      if (parent === -1) break;  // orphaned pixel — should not happen
+      cur = parent;
+    }
+  }
+
+  stampCircle(cx, cy, r, strength, markVein) {
+    const W=this.W,H=this.H;
+    for (let dy=-r; dy<=r; dy++) for (let dx=-r; dx<=r; dx++) {
+      if (dx*dx+dy*dy > r*r) continue;
+      const nx=cx+dx, ny=cy+dy;
+      if (nx<0||ny<0||nx>=W||ny>=H) continue;
+      const i = ny*W+nx;
+      const fade = 1-Math.sqrt(dx*dx+dy*dy)/r;
+      this.trailMap[i] = Math.min(255, this.trailMap[i]+strength*fade);
+      if (markVein && fade > 0.4) { this.veinMap[i]=1; this.confirmedVein[i]=1; }
+    }
+  }
+
+  /* ── Phase transition ────────────────────────────────────── */
+  enterOptimize() {
+    if (this.phase === 'optimize') return;
+    this.phase = 'optimize';
+    this.tips  = [];
+    document.getElementById('hud-p').textContent = 'OPTIMIZE';
+    document.getElementById('hud-f').textContent = 'ON';
+    this.announce('◈ PHASE II — NETWORK OPTIMIZATION');
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     GLOBAL FLUX — bidirectional nutrient pulse
+     Only fires on confirmedVein pixels.
+     Confirmed veins also receive a MINIMUM FLOOR brightness
+     ensuring they never decay below a visible threshold.
+  ═══════════════════════════════════════════════════════ */
+  applyFlux() {
+    const { fluxAmp, fluxFreq, veinThresh } = this.cfg;
+    const osc   = Math.sin(this.time * fluxFreq * Math.PI*2);
+    const boost = Math.abs(osc) * fluxAmp;
+    const floor = veinThresh * 1.1;  // confirmed veins never go below this
+
+    const N = this.W*this.H;
+    for (let i=0; i<N; i++) {
+      if (!this.confirmedVein[i]) continue;
+      // Apply floor FIRST — prevents any decay killing confirmed veins
+      if (this.trailMap[i] < floor) this.trailMap[i] = floor;
+      // Then add oscillating flux boost
+      this.trailMap[i] = Math.min(255, this.trailMap[i] + boost);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     TRAIL PROCESSING
+     Gaussian diffusion → Laplacian smoothing → differential decay
+     confirmedVein pixels are floored AFTER decay so they persist.
+  ═══════════════════════════════════════════════════════ */
+  processTrailMap() {
+    const { baseDecay,veinThresh,veinDecayR,diffusion,veinRigidity } = this.cfg;
+    const W=this.W, H=this.H;
+    const slowDecay = Math.pow(baseDecay, veinDecayR);
+    const fastDecay = baseDecay;
+    const omD = 1-diffusion;
+    const floor = veinThresh * 1.05;
+
+    for (let y=1; y<H-1; y++) {
+      const Y=y*W, Yu=(y-1)*W, Yd=(y+1)*W;
+      for (let x=1; x<W-1; x++) {
+        const i=Y+x;
+        if (this.wallMap[i]) { this.trailTmp[i]=0; continue; }
+
+        // Gaussian blur
+        const blurred = (
+          this.trailMap[Yu+x-1]*1 + this.trailMap[Yu+x]*2 + this.trailMap[Yu+x+1]*1 +
+          this.trailMap[Y +x-1]*2 + this.trailMap[Y +x]*4 + this.trailMap[Y +x+1]*2 +
+          this.trailMap[Yd+x-1]*1 + this.trailMap[Yd+x]*2 + this.trailMap[Yd+x+1]*1
+        ) / 16;
+
+        let mixed = this.trailMap[i]*omD + blurred*diffusion;
+
+        // Laplacian smoothing (rubber-band path straightening)
+        if (this.veinMap[i] && veinRigidity > 0) {
+          const navg = (this.trailMap[Y+x-1]+this.trailMap[Y+x+1]+
+                        this.trailMap[Yu+x ]+this.trailMap[Yd+x ]) / 4;
+          mixed += (navg - this.trailMap[i]) * veinRigidity;
+        }
+
+        const after = Math.max(0, mixed - this.repMap[i]*3);
+        const isVein = after >= veinThresh;
+        let result = after * (isVein ? slowDecay : fastDecay);
+
+        // Confirmed veins are floored — they CANNOT decay to zero
+        if (this.confirmedVein[i] && result < floor) result = floor;
+
+        this.trailTmp[i] = result;
+
+        // Update dynamic veinMap
+        this.veinMap[i] = result >= veinThresh ? 1 : 0;
+      }
+    }
+
+    // Edge rows — fast decay, floor for confirmed
+    for (let x=0; x<W; x++) {
+      this.trailTmp[x]         = Math.max(this.confirmedVein[x]         ? floor:0, this.trailMap[x]*fastDecay);
+      this.trailTmp[(H-1)*W+x] = Math.max(this.confirmedVein[(H-1)*W+x]? floor:0, this.trailMap[(H-1)*W+x]*fastDecay);
+    }
+    for (let y=0; y<H; y++) {
+      this.trailTmp[y*W]     = Math.max(this.confirmedVein[y*W]    ? floor:0, this.trailMap[y*W]*fastDecay);
+      this.trailTmp[y*W+W-1] = Math.max(this.confirmedVein[y*W+W-1]? floor:0, this.trailMap[y*W+W-1]*fastDecay);
+    }
+
+    const tmp=this.trailMap; this.trailMap=this.trailTmp; this.trailTmp=tmp;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     RENDER
+  ═══════════════════════════════════════════════════════ */
+  render() {
+    const data=this.imgData.data;
+    const N=this.W*this.H;
+    const osc = Math.sin(this.time*this.cfg.fluxFreq*Math.PI*2)*0.2+1;
+
+    let litPx=0, maxT=0;
+
+    for (let i=0; i<N; i++) {
+      const pi=i*4;
+      let r=C.bg[0], g=C.bg[1], b=C.bg[2];
+
+      const t=this.trailMap[i];
+      if (t>maxT) maxT=t;
+
+      if (t>0.5) {
+        litPx++;
+        const norm  = Math.min(1, t/200);
+        const isCV  = this.confirmedVein[i];
+        // Confirmed veins: high gamma lift + flux pulse = dramatically brighter
+        const gamma = Math.pow(norm, isCV ? 0.28 : 0.75);
+        const boost = isCV ? osc*1.6 : 0.45;
+        const gm    = Math.min(1, gamma*boost);
+
+        r = Math.round(r + (C.vein[0]-r)*gm);
+        g = Math.round(g + (C.vein[1]-g)*gm);
+        b = Math.round(b + (C.vein[2]-b)*gm);
+      }
+
+      if (this.repMap[i]>0) {
+        const ri=this.repMap[i]*0.26;
+        r=Math.min(255,r+C.rep[0]*ri); g=Math.min(255,g+C.rep[1]*ri*0.25);
+      }
+      if (this.wallMap[i]) { r=C.wall[0]*0.4; g=C.wall[1]*0.2; b=C.wall[2]*0.2; }
+
+      data[pi]=r; data[pi+1]=g; data[pi+2]=b; data[pi+3]=255;
+    }
+
+    this.ctx.putImageData(this.imgData, 0, 0);
+
+    // Source node
+    this.drawGlow(this.source.x, this.source.y,
+      this.source.r*(0.88+0.12*Math.sin(this.time*.07)), C.src, 0.9);
+
+    // Food nodes — connected ones tint green
+    for (const f of this.food) {
+      const fp  = Math.sin(this.time*0.1+f.pulse)*0.18+0.82;
+      const col = f.connected ? [80,255,160] : C.food;
+      this.drawGlow(f.x, f.y, f.r*fp, col, fp);
+    }
+
+    // Stats
+    const cov = Math.round(litPx/N*100);
+    document.getElementById('hs-tips').textContent  = this.tips.length;
+    document.getElementById('hs-cov').textContent   = cov+'%';
+    document.getElementById('hs-depth').textContent = this.maxDepth;
+    if (this.frame%12===0) {
+      document.getElementById('ms-tips').textContent  = this.tips.length;
+      document.getElementById('ms-veins').textContent = this.food.filter(f=>f.connected).length;
+      document.getElementById('ms-depth').textContent = this.maxDepth;
+      document.getElementById('ms-cov').textContent   = cov+'%';
+      document.getElementById('ms-trail').textContent = maxT.toFixed(0);
+    }
+  }
+
+  drawGlow(x, y, r, color, intensity) {
+    const ctx=this.ctx;
+    const g=ctx.createRadialGradient(x,y,0,x,y,r*2.4);
+    g.addColorStop(0,  `rgba(${color[0]},${color[1]},${color[2]},${(intensity*.55).toFixed(2)})`);
+    g.addColorStop(.5, `rgba(${color[0]},${color[1]},${color[2]},${(intensity*.2).toFixed(2)})`);
+    g.addColorStop(1,  'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(x,y,r*2.4,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r*.55,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${color[0]},${color[1]},${color[2]},${intensity.toFixed(2)})`; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r*.25,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${(intensity*.45).toFixed(2)})`; ctx.fill();
+  }
+
+  /* ── Main step ───────────────────────────────────────────── */
+  step() {
+    if (this.phase==='growth')   this.updateGrowthTips();
+    if (this.phase==='optimize') this.applyFlux();
+    this.processTrailMap();
+    this.render();
+
+    this.frame++; this.time++; this.fpsN++;
+    const now=performance.now();
+    if (now-this.fpsT >= 500) {
+      this.fps=Math.round(this.fpsN*1000/(now-this.fpsT));
+      this.fpsN=0; this.fpsT=now;
+      document.getElementById('sfps').textContent    = this.fps+' FPS';
+      document.getElementById('hud-fps').textContent = this.fps;
+    }
+    document.getElementById('hud-fr').textContent = this.frame;
+  }
+
+  loop() { if (!this.running) return; this.step(); this.rafId=requestAnimationFrame(()=>this.loop()); }
+
+  start() {
+    if (this.running) return;
+    this.running=true; this.fpsT=performance.now(); this.fpsN=0;
+    this.loop(); this.setUI('on');
+  }
+  pause() {
+    this.running=false;
+    if (this.rafId){ cancelAnimationFrame(this.rafId); this.rafId=null; }
+    this.setUI('pause');
+  }
+  reset() { this.pause(); this.initWorld(); this.render(); this.setUI('idle'); }
+
+  setUI(s) {
+    const dot=document.getElementById('sdot');
+    const txt=document.getElementById('stext');
+    const hud=document.getElementById('hud-s');
+    if (s==='on')    { dot.className='sdot on';    txt.textContent='SIMULATING'; hud.textContent='ACTIVE'; }
+    else if(s==='pause'){dot.className='sdot pause';txt.textContent='PAUSED';    hud.textContent='PAUSED'; }
+    else             { dot.className='sdot';       txt.textContent='IDLE';       hud.textContent='READY'; }
+  }
+
+  announce(msg) {
+    const el=document.getElementById('phase-ann');
+    el.textContent=msg; el.style.opacity='1';
+    setTimeout(()=>el.style.opacity='0', 3400);
+  }
+
+  set(k,v) { this.cfg[k]=v; }
+}
+
+/* ── Flux waveform visualizer ─────────────────────────────── */
+class FluxViz {
+  constructor(cv, sim) {
+    this.cv=cv; this.ctx=cv.getContext('2d'); this.sim=sim;
+    this.hist=new Array(cv.width).fill(0);
+    setInterval(()=>{ if(sim.running) this.draw(); }, 48);
+  }
+  draw() {
+    const s=this.sim.cfg;
+    const v=Math.sin(this.sim.time*s.fluxFreq*Math.PI*2)*s.fluxAmp/14;
+    this.hist.shift(); this.hist.push(v);
+    const ctx=this.ctx,w=this.cv.width,h=this.cv.height;
+    ctx.fillStyle='#1c1c2e'; ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
+    ctx.strokeStyle='#00ff88'; ctx.lineWidth=1.5;
+    ctx.shadowColor='#00ff88'; ctx.shadowBlur=5;
+    ctx.beginPath();
+    this.hist.forEach((v,i)=>{ const y=h/2-v*h*.42; i===0?ctx.moveTo(i,y):ctx.lineTo(i,y); });
+    ctx.stroke(); ctx.shadowBlur=0;
+  }
+}
+
+/* ── Bootstrap ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas=document.getElementById('sim-canvas');
+  const sim=new Physarum(canvas);
+  window.sim=sim;
+
+  new FluxViz(document.getElementById('osc-canvas'), sim);
+  sim.render();
+
+  // Resize
+  let rt;
+  window.addEventListener('resize',()=>{
+    clearTimeout(rt);
+    rt=setTimeout(()=>{
+      const was=sim.running; sim.pause(); sim.resize(); sim.initWorld();
+      if(was) sim.start();
+    },250);
+  });
+
+  // Buttons
+  document.getElementById('btn-start').addEventListener('click',()=>sim.start());
+  document.getElementById('btn-pause').addEventListener('click',()=>sim.pause());
+  document.getElementById('btn-reset').addEventListener('click',()=>sim.reset());
+  document.getElementById('btn-clrW').addEventListener('click',()=>sim.clearWalls());
+  document.getElementById('btn-clrR').addEventListener('click',()=>sim.clearRepel());
+
+  // Tools
+  document.querySelectorAll('.tbtn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.tbtn').forEach(b=>{ b.classList.remove('active','food','wall','rep'); });
+      btn.classList.add('active',btn.dataset.tool);
+      sim.setTool(btn.dataset.tool);
+    });
+  });
+
+  // Sliders
+  const SL=[
+    {id:'s-speed',  key:'speed',        suf:'px',fmt:v=>v.toFixed(2)},
+    {id:'s-branch', key:'branchRate',   suf:'',  fmt:v=>v.toFixed(3)},
+    {id:'s-angle',  key:'branchAngle',  suf:'°', fmt:v=>Math.round(v)},
+    {id:'s-wigA',   key:'wigAmp',       suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-wigF',   key:'wigFreq',      suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-maxA',   key:'maxAgents',    suf:'',  fmt:v=>Math.round(v)},
+    {id:'s-maxD',   key:'maxDepth',     suf:'',  fmt:v=>Math.round(v)},
+    {id:'s-foodA',  key:'foodAttr',     suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-sense',  key:'sensorRange',  suf:'px',fmt:v=>Math.round(v)},
+    {id:'s-decay',  key:'baseDecay',    suf:'',  fmt:v=>v.toFixed(4)},
+    {id:'s-thresh', key:'veinThresh',   suf:'',  fmt:v=>Math.round(v)},
+    {id:'s-veinR',  key:'veinDecayR',   suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-dep',    key:'deposit',      suf:'',  fmt:v=>Math.round(v)},
+    {id:'s-diff',   key:'diffusion',    suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-rigid',  key:'veinRigidity', suf:'',  fmt:v=>v.toFixed(2)},
+    {id:'s-flux',   key:'fluxAmp',      suf:'',  fmt:v=>v.toFixed(1)},
+    {id:'s-fluxF',  key:'fluxFreq',     suf:'',  fmt:v=>v.toFixed(3)},
+    {id:'s-reinf',  key:'reinforceStr', suf:'',  fmt:v=>Math.round(v)},
+    {id:'s-brush',  key:'brushSize',    suf:'px',fmt:v=>Math.round(v)},
+  ];
+  SL.forEach(({id,key,suf,fmt})=>{
+    const el=document.getElementById(id);
+    const val=document.getElementById('v-'+id.slice(2));
+    if(!el) return;
+    el.addEventListener('input',e=>{
+      const v=parseFloat(e.target.value);
+      sim.set(key,v);
+      if(val) val.textContent=fmt(v)+suf;
+    });
+  });
+
+  // Persistence master dial
+  const sP=document.getElementById('s-persist');
+  const vP=document.getElementById('v-persist');
+  const pF=document.getElementById('persist-fill');
+  sP.addEventListener('input',e=>{
+    const p=parseFloat(e.target.value);
+    vP.textContent=p.toFixed(2);
+    pF.style.width=(p*100)+'%';
+    const nd=0.92+p*(0.9998-0.92);
+    const nr=Math.max(0.02, 0.88-p*0.84);
+    sim.set('baseDecay',nd); sim.set('veinDecayR',nr);
+    document.getElementById('s-decay').value=nd;
+    document.getElementById('v-decay').textContent=nd.toFixed(4);
+    document.getElementById('s-veinR').value=nr.toFixed(2);
+    document.getElementById('v-veinR').textContent=nr.toFixed(2);
+  });
+
+  setTimeout(()=>sim.start(), 350);
+});
+</script>
+</body>
+</html>
