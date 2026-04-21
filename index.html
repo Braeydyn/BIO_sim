@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,13 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PROJECT::START — TERMINAL</title>
 
-  <!--
-  ================================================================
-    FONT IMPORT
-    JetBrains Mono is our monospace anchor for the entire system.
-    Fallbacks: Fira Code → Courier New → generic monospace.
-  ================================================================
-  -->
   <link
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap"
     rel="stylesheet"
@@ -20,29 +14,23 @@
   <style>
     /* ============================================================
        DESIGN TOKENS
-       All colors, glows, and timing are defined here as CSS custom
-       properties. To retheme the entire page, edit only this block.
     ============================================================ */
     :root {
-      --color-bg:        #0a0a0a;   /* Deep phosphor black         */
-      --color-primary:   #33ff00;   /* Neon green — main foreground */
-      --color-secondary: #ffb000;   /* Amber — accents & warnings  */
-      --color-muted:     #1f521f;   /* Dimmed green — borders/inactive */
-      --color-error:     #ff3333;   /* Bright red — errors         */
-      --color-black:     #000000;   /* Inverted text on hover      */
+      --color-bg:        #0a0a0a;
+      --color-primary:   #33ff00;
+      --color-secondary: #ffb000;
+      --color-muted:     #1f521f;
+      --color-error:     #ff3333;
 
-      /* Phosphor glow — applied to all primary-colored text */
-      --glow-primary:    0 0 6px rgba(51, 255, 0, 0.60),
-                         0 0 12px rgba(51, 255, 0, 0.25);
-      --glow-secondary:  0 0 6px rgba(255, 176, 0, 0.60),
-                         0 0 12px rgba(255, 176, 0, 0.25);
-      --glow-strong:     0 0 8px  rgba(51, 255, 0, 0.90),
-                         0 0 20px rgba(51, 255, 0, 0.40);
+      --glow-primary:   0 0 6px rgba(51, 255, 0, 0.60),
+                        0 0 12px rgba(51, 255, 0, 0.25);
+      --glow-secondary: 0 0 6px rgba(255, 176, 0, 0.60),
+                        0 0 12px rgba(255, 176, 0, 0.25);
+      --glow-strong:    0 0 8px  rgba(51, 255, 0, 0.90),
+                        0 0 20px rgba(51, 255, 0, 0.40);
 
-      /* Typography — monospace supremacy, no exceptions */
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
-      /* Timing — boot sequence stagger values */
       --stagger-1: 0.3s;
       --stagger-2: 0.6s;
       --stagger-3: 0.9s;
@@ -52,19 +40,15 @@
 
     /* ============================================================
        RESET & BASE
-       Strict zero-radius, zero-shadow, monospaced-everything rules.
     ============================================================ */
     *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      border-radius: 0 !important; /* Terminal rule: NO rounded corners */
+      border-radius: 0 !important;
     }
 
-    html {
-      font-size: 16px;
-      scroll-behavior: smooth;
-    }
+    html { font-size: 16px; scroll-behavior: smooth; }
 
     body {
       background-color: var(--color-bg);
@@ -74,40 +58,28 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       padding: 2rem 1.5rem;
       position: relative;
       overflow-x: hidden;
-
-      /* Subtle phosphor text glow on body-level text */
       text-shadow: var(--glow-primary);
     }
 
-    /* ============================================================
-       CRT SCANLINE OVERLAY
-       A pointer-events:none pseudo-element that sits over everything.
-       The repeating-linear-gradient creates horizontal scan lines.
-       Opacity is deliberately low — this adds texture, not obstruction.
-    ============================================================ */
+    /* CRT scanlines */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background: repeating-linear-gradient(
         to bottom,
-        transparent 0px,
-        transparent 3px,
-        rgba(0, 0, 0, 0.18) 3px,
-        rgba(0, 0, 0, 0.18) 4px
+        transparent 0px, transparent 3px,
+        rgba(0,0,0,0.18) 3px, rgba(0,0,0,0.18) 4px
       );
-      pointer-events: none; /* Never blocks clicks */
+      pointer-events: none;
       z-index: 9999;
     }
 
-    /* ============================================================
-       CRT VIGNETTE OVERLAY
-       A subtle radial vignette darkens the corners like a real CRT tube.
-    ============================================================ */
+    /* CRT vignette */
     body::after {
       content: '';
       position: fixed;
@@ -115,7 +87,7 @@
       background: radial-gradient(
         ellipse at center,
         transparent 60%,
-        rgba(0, 0, 0, 0.55) 100%
+        rgba(0,0,0,0.55) 100%
       );
       pointer-events: none;
       z-index: 9998;
@@ -124,69 +96,61 @@
     /* ============================================================
        KEYFRAME ANIMATIONS
     ============================================================ */
-
-    /* Standard cursor blink — the heartbeat of the interface */
     @keyframes blink {
-      0%, 49%  { opacity: 1; }
+      0%, 49%   { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
 
-    /* Boot-sequence fade-in — each element staggers in */
     @keyframes bootFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0);   }
     }
 
-    /* Typewriter effect for the project title */
     @keyframes typewriter {
       from { width: 0; }
       to   { width: 100%; }
     }
 
-    /* Subtle horizontal glitch — fires on button hover */
     @keyframes glitch {
-      0%   { text-shadow: var(--glow-primary); clip-path: none; }
+      0%   { text-shadow: var(--glow-primary); }
       20%  { text-shadow: -2px 0 var(--color-error), 2px 0 var(--color-secondary); }
       40%  { text-shadow: var(--glow-primary); }
-      60%  { text-shadow: 2px 0 var(--color-error), -2px 0 var(--color-secondary); }
+      60%  { text-shadow:  2px 0 var(--color-error),-2px 0 var(--color-secondary); }
       80%  { text-shadow: var(--glow-primary); }
       100% { text-shadow: var(--glow-primary); }
     }
 
-    /* Progress bar fill animation — decorative status bars */
     @keyframes fillBar {
       from { width: 0%; }
       to   { width: var(--bar-fill, 75%); }
     }
 
-    /* Flicker — occasional screen flicker on the title row */
     @keyframes flicker {
-      0%, 97%, 100% { opacity: 1; }
+      0%, 97%, 100% { opacity: 1;   }
       98%           { opacity: 0.4; }
-      99%           { opacity: 1; }
+      99%           { opacity: 1;   }
     }
 
+    @keyframes sectionReveal {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    .reveal { animation: sectionReveal 0.6s ease forwards; }
+
     /* ============================================================
-       MAIN LAYOUT CONTAINER
-       Flexbox column, centered, max-width constrains line length.
+       LAYOUT CONTAINER
     ============================================================ */
     .terminal-window {
       width: 100%;
       max-width: 860px;
       display: flex;
       flex-direction: column;
-      gap: 0; /* Gaps handled by individual section margins */
+      gap: 0;
     }
 
     /* ============================================================
-       WINDOW CHROME (Title Bar)
-       Mimics a tmux/WezTerm pane header: +─── TITLE ───+
+       WINDOW CHROME
     ============================================================ */
     .window-chrome {
       border: 1px solid var(--color-muted);
@@ -196,22 +160,19 @@
       align-items: center;
       justify-content: space-between;
       background-color: var(--color-muted);
-
-      /* Boot animation — first element in */
       opacity: 0;
-      animation: bootFadeIn 0.4s ease forwards;
-      animation-delay: var(--stagger-1);
+      animation: bootFadeIn 0.4s ease forwards var(--stagger-1);
     }
 
-    .window-chrome .chrome-title {
+    .chrome-title {
       font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       color: var(--color-bg);
-      text-shadow: none; /* Inverted: dark text on green bar */
+      text-shadow: none;
     }
 
-    .window-chrome .chrome-controls {
+    .chrome-controls {
       font-size: 0.7rem;
       color: var(--color-bg);
       text-shadow: none;
@@ -219,8 +180,7 @@
     }
 
     /* ============================================================
-       NAMEPLATE SECTION
-       The "pane" containing all header content.
+       NAMEPLATE
     ============================================================ */
     .nameplate {
       border: 1px solid var(--color-muted);
@@ -229,13 +189,12 @@
       flex-direction: column;
       gap: 1.25rem;
       position: relative;
-
       opacity: 0;
-      animation: bootFadeIn 0.5s ease forwards, flicker 8s infinite 3s;
-      animation-delay: var(--stagger-2), 3s;
+      animation:
+        bootFadeIn 0.5s ease forwards var(--stagger-2),
+        flicker 8s infinite 3s;
     }
 
-    /* System prompt line above the title */
     .nameplate-prompt {
       font-size: 0.72rem;
       color: var(--color-secondary);
@@ -243,26 +202,16 @@
       letter-spacing: 0.06em;
     }
 
-    /* ASCII border art title block */
-    .ascii-title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 0.15rem;
-    }
+    .ascii-title-wrap { display: flex; flex-direction: column; gap: 0.15rem; }
 
     .ascii-border-line {
       font-size: 0.78rem;
       color: var(--color-muted);
       text-shadow: none;
-      letter-spacing: 0;
       user-select: none;
     }
 
-    /* The project title itself — ALL CAPS, typewriter effect */
-    .project-title-wrap {
-      overflow: hidden;        /* Required for typewriter clip */
-      white-space: nowrap;
-    }
+    .project-title-wrap { overflow: hidden; white-space: nowrap; }
 
     .project-title {
       display: inline-block;
@@ -272,16 +221,12 @@
       text-transform: uppercase;
       color: var(--color-primary);
       text-shadow: var(--glow-strong);
-
-      /* Typewriter: clips from left → right */
       overflow: hidden;
       white-space: nowrap;
       width: 0;
-      animation: typewriter 1.2s steps(30, end) forwards;
-      animation-delay: var(--stagger-3);
+      animation: typewriter 1.2s steps(30, end) forwards var(--stagger-3);
     }
 
-    /* Blinking cursor appended after the title */
     .title-cursor {
       display: inline-block;
       width: 0.9ch;
@@ -293,28 +238,21 @@
       animation: blink 1s step-end infinite;
     }
 
-    /* Horizontal rule — ASCII style separator */
     .ascii-rule {
       color: var(--color-muted);
       font-size: 0.75rem;
-      letter-spacing: 0;
       user-select: none;
       overflow: hidden;
       white-space: nowrap;
     }
 
-    /* Developer meta block: name + department */
     .meta-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 0.6rem 2rem;
     }
 
-    .meta-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.1rem;
-    }
+    .meta-item { display: flex; flex-direction: column; gap: 0.1rem; }
 
     .meta-label {
       font-size: 0.65rem;
@@ -338,7 +276,6 @@
 
     /* ============================================================
        STATUS BAR
-       Simulates a system uptime / resource line between sections.
     ============================================================ */
     .status-bar {
       border-left: 1px solid var(--color-muted);
@@ -349,11 +286,9 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.5rem;
-      background-color: rgba(31, 82, 31, 0.12);
-
+      background-color: rgba(31,82,31,0.12);
       opacity: 0;
-      animation: bootFadeIn 0.4s ease forwards;
-      animation-delay: var(--stagger-3);
+      animation: bootFadeIn 0.4s ease forwards var(--stagger-3);
     }
 
     .status-item {
@@ -366,23 +301,10 @@
       gap: 0.4ch;
     }
 
-    .status-item .status-ok {
-      color: var(--color-primary);
-      text-shadow: var(--glow-primary);
-    }
+    .status-ok  { color: var(--color-primary); text-shadow: var(--glow-primary); }
+    .status-err { color: var(--color-error);   text-shadow: 0 0 6px rgba(255,51,51,0.5); }
 
-    .status-item .status-err {
-      color: var(--color-error);
-      text-shadow: 0 0 6px rgba(255, 51, 51, 0.5);
-    }
-
-    /* Progress bar component: [|||||||||.....] */
-    .progress-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.4ch;
-      font-size: 0.65rem;
-    }
+    .progress-bar { display: flex; align-items: center; gap: 0.4ch; font-size: 0.65rem; }
 
     .progress-track {
       display: inline-block;
@@ -399,12 +321,11 @@
       background-color: var(--color-primary);
       box-shadow: var(--glow-primary);
       width: 0%;
-      animation: fillBar 1.5s ease forwards;
-      animation-delay: var(--stagger-4);
+      animation: fillBar 1.5s ease forwards var(--stagger-4);
     }
 
     /* ============================================================
-       NAV HUB — The Three Button Section
+       NAV HUB
     ============================================================ */
     .nav-hub {
       border: 1px solid var(--color-muted);
@@ -413,10 +334,8 @@
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
-
       opacity: 0;
-      animation: bootFadeIn 0.5s ease forwards;
-      animation-delay: var(--stagger-4);
+      animation: bootFadeIn 0.5s ease forwards var(--stagger-4);
     }
 
     .nav-hub-header {
@@ -426,7 +345,7 @@
       letter-spacing: 0.12em;
     }
 
-    /* Button grid — three columns on desktop, stacks on mobile */
+    /* Row 1: 3 equal columns */
     .nav-buttons {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -434,55 +353,48 @@
     }
 
     /*
-    ── NAV BUTTON ──────────────────────────────────────────────────
-    Structure follows the [ LABEL ] bracket convention.
-    Hover = inverted video: bg fills with green, text goes black.
-    The <a> tag wraps all button content for accessibility.
-    ────────────────────────────────────────────────────────────────
+      Row 2: 2 columns, width capped to align under columns 1 & 2.
+      Right edge of btn-5 aligns with right edge of btn-2.
     */
+    .nav-buttons-row2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      max-width: calc(66.666% + 0.333rem);
+      margin-top: 1rem;
+    }
+
+    /* ── Base nav button ── */
     .nav-btn {
-      /* Reset anchor styles */
       text-decoration: none;
       color: inherit;
-
-      /* Layout */
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1.5rem 1.25rem;
-
-      /* Terminal pane border */
       border: 1px solid var(--color-muted);
-
-      /* Interaction baseline */
       cursor: pointer;
       position: relative;
       overflow: hidden;
-
-      /* Smooth state transitions */
       transition:
-        border-color 0.18s ease,
+        border-color     0.18s ease,
         background-color 0.18s ease,
-        transform 0.18s ease;
+        transform        0.18s ease;
     }
 
-    /* Top bracket decoration — part of the [ LABEL ] motif */
     .nav-btn::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 2px;
       background-color: var(--color-muted);
       transition: background-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    /* ── HOVER STATE ── */
     .nav-btn:hover {
       border-color: var(--color-primary);
-      background-color: rgba(51, 255, 0, 0.06);
+      background-color: rgba(51,255,0,0.06);
       transform: translateY(-2px);
     }
 
@@ -491,25 +403,38 @@
       box-shadow: var(--glow-primary);
     }
 
-    /* Glitch fires on the button label text when hovering */
-    .nav-btn:hover .btn-label {
-      animation: glitch 0.4s ease;
-    }
+    .nav-btn:hover .btn-label { animation: glitch 0.4s ease; }
+    .nav-btn:active { transform: translateY(0); background-color: rgba(51,255,0,0.14); }
 
-    /* ── ACTIVE / PRESSED STATE ── */
-    .nav-btn:active {
-      transform: translateY(0px);
-      background-color: rgba(51, 255, 0, 0.14);
-    }
-
-    /* ── FOCUS STATE (keyboard navigation) ── */
     .nav-btn:focus-visible {
       outline: 1px solid var(--color-primary);
       outline-offset: 2px;
       box-shadow: var(--glow-strong);
     }
 
-    /* Button index indicator — simulates ls -la numbering */
+    /* ── Amber variant (buttons 4 & 5) ── */
+    .nav-btn--amber { border-color: rgba(255,176,0,0.35); }
+    .nav-btn--amber::before { background-color: rgba(255,176,0,0.35); }
+
+    .nav-btn--amber:hover {
+      border-color: var(--color-secondary);
+      background-color: rgba(255,176,0,0.06);
+    }
+
+    .nav-btn--amber:hover::before {
+      background-color: var(--color-secondary);
+      box-shadow: var(--glow-secondary);
+    }
+
+    .nav-btn--amber .btn-index        { color: rgba(255,176,0,0.50); }
+    .nav-btn--amber:hover .btn-index  { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
+    .nav-btn--amber .btn-glyph        { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
+    .nav-btn--amber .btn-label        { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
+    .nav-btn--amber:hover .btn-sublabel { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
+    .nav-btn--amber:hover .btn-arrow  { color: var(--color-secondary); text-shadow: var(--glow-secondary); transform: translateX(4px); }
+    .nav-btn--amber:hover .btn-label  { animation: glitch 0.4s ease; }
+
+    /* ── Button child elements ── */
     .btn-index {
       font-size: 0.62rem;
       color: var(--color-muted);
@@ -518,12 +443,8 @@
       transition: color 0.18s ease;
     }
 
-    .nav-btn:hover .btn-index {
-      color: var(--color-secondary);
-      text-shadow: var(--glow-secondary);
-    }
+    .nav-btn:hover .btn-index { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
 
-    /* The icon/glyph above the label */
     .btn-glyph {
       font-size: 1.4rem;
       line-height: 1;
@@ -532,11 +453,8 @@
       transition: text-shadow 0.18s ease;
     }
 
-    .nav-btn:hover .btn-glyph {
-      text-shadow: var(--glow-strong);
-    }
+    .nav-btn:hover .btn-glyph { text-shadow: var(--glow-strong); }
 
-    /* The bracket-wrapped label: [ INITIATE ] */
     .btn-label {
       font-size: clamp(0.72rem, 1.5vw, 0.82rem);
       font-weight: 700;
@@ -550,7 +468,6 @@
     .btn-label::before { content: '[ '; }
     .btn-label::after  { content: ' ]'; }
 
-    /* Sublabel — small descriptor below the main label */
     .btn-sublabel {
       font-size: 0.62rem;
       color: var(--color-muted);
@@ -560,12 +477,8 @@
       transition: color 0.18s ease;
     }
 
-    .nav-btn:hover .btn-sublabel {
-      color: var(--color-primary);
-      text-shadow: var(--glow-primary);
-    }
+    .nav-btn:hover .btn-sublabel { color: var(--color-primary); text-shadow: var(--glow-primary); }
 
-    /* Arrow indicator — suggests navigation */
     .btn-arrow {
       font-size: 0.75rem;
       color: var(--color-muted);
@@ -573,10 +486,312 @@
       transition: color 0.18s ease, transform 0.18s ease;
     }
 
-    .nav-btn:hover .btn-arrow {
+    .nav-btn:hover .btn-arrow { color: var(--color-primary); text-shadow: var(--glow-primary); transform: translateX(4px); }
+
+    /* ============================================================
+       SHARED CONTENT SECTION SHELL
+       Starts invisible; .reveal applied by IntersectionObserver.
+    ============================================================ */
+    .content-section {
+      border: 1px solid var(--color-muted);
+      border-top: none;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      opacity: 0;
+    }
+
+    .section-header { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .section-header-prompt {
+      font-size: 0.7rem;
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+      letter-spacing: 0.12em;
+    }
+
+    .section-title {
+      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-primary);
+      text-shadow: var(--glow-strong);
+    }
+
+    .section-divider {
+      color: var(--color-muted);
+      font-size: 0.72rem;
+      user-select: none;
+      overflow: hidden;
+      white-space: nowrap;
+      text-shadow: none;
+    }
+
+    /* ============================================================
+       RESEARCH SECTION
+    ============================================================ */
+    .embed-block { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .embed-label {
+      font-size: 0.65rem;
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+      letter-spacing: 0.12em;
+    }
+
+    /* 16:9 responsive iframe wrapper */
+    .embed-frame-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      border: 1px solid var(--color-muted);
+      background-color: #0d0d0d;
+      overflow: hidden;
+    }
+
+    .embed-frame-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .embed-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--color-muted);
+      text-shadow: none;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      pointer-events: none;
+    }
+
+    .embed-placeholder-glyph {
+      font-size: 2rem;
+      color: rgba(31,82,31,0.6);
+      text-shadow: none;
+    }
+
+    /* Full-width PDF block */
+    .doc-block { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .doc-block-label {
+      font-size: 0.65rem;
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+      letter-spacing: 0.12em;
+    }
+
+    .pdf-frame-wrap {
+      border: 1px solid var(--color-muted);
+      background-color: #0d0d0d;
+      position: relative;
+      height: 480px;
+      overflow: hidden;
+    }
+
+    .pdf-frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ============================================================
+       TEAM SECTION
+    ============================================================ */
+
+    /* 4 equal columns on desktop — all members in one row */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    /* ── Member card ── */
+    .member-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 1.25rem 0.75rem 1rem;
+      border: 1px solid var(--color-muted);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      transition:
+        border-color     0.18s ease,
+        background-color 0.18s ease,
+        transform        0.18s ease;
+    }
+
+    /* Top accent bar */
+    .member-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background-color: var(--color-muted);
+      transition: background-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .member-card:hover {
+      border-color: var(--color-primary);
+      background-color: rgba(51,255,0,0.04);
+      transform: translateY(-2px);
+    }
+
+    .member-card:hover::before {
+      background-color: var(--color-primary);
+      box-shadow: var(--glow-primary);
+    }
+
+    /* ── Photo area ── */
+    .member-photo-wrap {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      flex-shrink: 0;
+    }
+
+    .member-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: grayscale(100%) sepia(40%) hue-rotate(80deg) brightness(0.85);
+      transition: filter 0.3s ease;
+    }
+
+    .member-card:hover .member-photo {
+      filter: grayscale(100%) sepia(60%) hue-rotate(80deg) brightness(1.05);
+    }
+
+    /* Clean placeholder — no heavy wireframe styling */
+    .member-photo-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px var(--color-muted);
+      font-size: 1.5rem;
+      color: var(--color-muted);
+      text-shadow: none;
+      user-select: none;
+      background-color: transparent;
+    }
+
+    /* ── Member info ── */
+    .member-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      width: 100%;
+    }
+
+    .member-index {
+      font-size: 0.55rem;
+      color: var(--color-muted);
+      letter-spacing: 0.1em;
+      text-shadow: none;
+      transition: color 0.18s ease;
+    }
+
+    .member-card:hover .member-index {
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+    }
+
+    .member-name {
+      font-size: clamp(0.65rem, 1.2vw, 0.78rem);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       color: var(--color-primary);
       text-shadow: var(--glow-primary);
-      transform: translateX(4px);
+      line-height: 1.3;
+      transition: text-shadow 0.18s ease;
+    }
+
+    .member-card:hover .member-name {
+      animation: glitch 0.4s ease;
+      text-shadow: var(--glow-strong);
+    }
+
+    .member-rule {
+      width: 40%;
+      border: none;
+      border-top: 1px solid var(--color-muted);
+      margin: 0 auto;
+      transition: border-color 0.18s ease, width 0.18s ease;
+    }
+
+    .member-card:hover .member-rule {
+      border-color: var(--color-primary);
+      width: 70%;
+    }
+
+    .member-meta { display: flex; flex-direction: column; gap: 0.2rem; }
+
+    .member-meta-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.4ch;
+      font-size: 0.58rem;
+      line-height: 1.4;
+    }
+
+    .member-meta-key {
+      color: var(--color-muted);
+      text-shadow: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .member-meta-val {
+      color: var(--color-primary);
+      text-shadow: var(--glow-primary);
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .member-meta-val.amber {
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+    }
+
+    /*
+      UPDATED: white-space: nowrap added to prevent "B.Tech CSBS E1"
+      from wrapping inside the narrow 4-column card.
+      letter-spacing tightened from 0.1em → 0.06em for the wider text.
+    */
+    .member-division-badge {
+      display: inline-block;
+      margin-top: 0.2rem;
+      padding: 0.12rem 0.4rem;
+      border: 1px solid var(--color-muted);
+      font-size: 0.55rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-secondary);
+      text-shadow: var(--glow-secondary);
+      white-space: nowrap;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .member-card:hover .member-division-badge {
+      border-color: var(--color-secondary);
+      box-shadow: var(--glow-secondary);
     }
 
     /* ============================================================
@@ -591,10 +806,8 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 0.5rem;
-
       opacity: 0;
-      animation: bootFadeIn 0.4s ease forwards;
-      animation-delay: var(--stagger-5);
+      animation: bootFadeIn 0.4s ease forwards var(--stagger-5);
     }
 
     .footer-prompt {
@@ -607,14 +820,13 @@
       gap: 0.5ch;
     }
 
-    .footer-prompt .blink-cursor {
+    .blink-cursor {
       display: inline-block;
       width: 0.6ch;
       height: 0.85em;
       background-color: var(--color-muted);
       vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
-      animation-delay: 0.5s;
+      animation: blink 1s step-end infinite 0.5s;
     }
 
     .footer-info {
@@ -625,22 +837,22 @@
     }
 
     /* ============================================================
-       RESPONSIVE — TABLET & MOBILE
-       Buttons stack to a single column below 640px.
-       Meta grid collapses below 480px.
+       RESPONSIVE BREAKPOINTS
     ============================================================ */
+
+    /* Tablet 641px–860px: team drops to 2×2 */
+    @media (max-width: 860px) {
+      .team-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Small tablet / large mobile ≤640px */
     @media (max-width: 640px) {
-      .nav-buttons {
-        grid-template-columns: 1fr; /* Stack vertically on mobile */
-      }
+      .nav-buttons      { grid-template-columns: 1fr; }
+      .nav-buttons-row2 { grid-template-columns: 1fr; max-width: 100%; }
 
-      .nameplate {
-        padding: 1.5rem 1.25rem;
-      }
-
-      .nav-hub {
-        padding: 1.5rem 1.25rem;
-      }
+      .nameplate       { padding: 1.5rem 1.25rem; }
+      .nav-hub         { padding: 1.5rem 1.25rem; }
+      .content-section { padding: 1.5rem 1.25rem; }
 
       .terminal-footer {
         padding: 0.7rem 1.25rem;
@@ -654,66 +866,36 @@
         align-items: flex-start;
         gap: 0.3rem;
       }
+
+      /* 2-col nav row 1 on small tablet before going single */
+      @media (min-width: 480px) {
+        .nav-buttons { grid-template-columns: repeat(2, 1fr); }
+      }
     }
 
+    /* Mobile ≤480px: everything single column */
     @media (max-width: 480px) {
-      .meta-grid {
-        grid-template-columns: 1fr; /* Single column meta on small phones */
-      }
+      .meta-grid { grid-template-columns: 1fr; }
+      .team-grid { grid-template-columns: 1fr; }
 
-      .project-title {
-        font-size: 1.2rem;
-      }
+      .project-title { font-size: 1.2rem; }
 
-      /* Wrap long ASCII lines gracefully */
       .ascii-border-line,
-      .ascii-rule {
-        overflow: hidden;
-        text-overflow: clip;
-      }
-    }
-
-    /* Medium breakpoint: 2 columns for tablet */
-    @media (min-width: 480px) and (max-width: 640px) {
-      .nav-buttons {
-        grid-template-columns: 1fr 1fr;
-      }
+      .ascii-rule { overflow: hidden; text-overflow: clip; }
     }
   </style>
 </head>
 
 <body>
-
-  <!--
-  ================================================================
-    ROOT TERMINAL WINDOW
-    Everything is wrapped in .terminal-window — the single "pane".
-  ================================================================
-  -->
   <main class="terminal-window" role="main">
 
-    <!--
-    ── WINDOW CHROME ─────────────────────────────────────────────
-    Simulates a terminal emulator title bar (WezTerm / iTerm style).
-    ──────────────────────────────────────────────────────────────
-    -->
+    <!-- ── WINDOW CHROME ──────────────────────────────────────── -->
     <div class="window-chrome" aria-hidden="true">
-      <span class="chrome-title">
-        ██ PROJECT::INIT — v1.0.0 — TTY0
-      </span>
+      <span class="chrome-title">██ PROJECT::INIT — v1.0.0 — TTY0</span>
       <span class="chrome-controls">[─] [□] [×]</span>
     </div>
 
-    <!--
-    ── NAMEPLATE ─────────────────────────────────────────────────
-    Central header: project title + developer meta.
-
-    ✏️  EDIT HERE:
-        - Change the project title inside .project-title
-        - Update "Developer Name" in .meta-value
-        - Update "Department / Course" in .meta-value.amber
-    ──────────────────────────────────────────────────────────────
-    -->
+    <!-- ── NAMEPLATE ──────────────────────────────────────────── -->
     <section class="nameplate" aria-label="Project Nameplate">
 
       <p class="nameplate-prompt">
@@ -726,20 +908,8 @@
         </span>
       </div>
 
-      <!--
-        Typewriter Effect:
-        The .project-title width animates from 0 → 100%, revealing
-        text left-to-right. The .title-cursor blinks indefinitely.
-        The parent .project-title-wrap clips the overflow.
-      -->
       <div class="project-title-wrap" role="heading" aria-level="1">
-        <span class="project-title" id="project-title">
-          <!--
-          ✏️  EDIT: Replace with your actual project title.
-                     ALL CAPS is enforced via CSS text-transform.
-          -->
-          BIO-INSPIRED ALGORITHIMS
-        </span>
+        <span class="project-title" id="project-title">BIO-INSPIRED ALGORITHMS</span>
         <span class="title-cursor" aria-hidden="true"></span>
       </div>
 
@@ -753,228 +923,449 @@
         ──────────────────────────────────────────────────────────
       </p>
 
-      <!-- Developer + Department Meta -->
       <div class="meta-grid">
-
         <div class="meta-item">
           <span class="meta-label">// DEVELOPER</span>
-          <!--
-          ✏️  EDIT: Replace with your actual name.
-          -->
-          <span class="meta-value">&gt; E013-Mudit Dixit<br>&gt; E016-Nimay Gupta<br>&gt; E018-Aryav Gupta<br>&gt; E026-Braeden Justinraj</span>
+          <span class="meta-value">
+            &gt; E013-Mudit Dixit<br>
+            &gt; E016-Nimay Gupta<br>
+            &gt; E018-Aryav Gupta<br>
+            &gt; E026-Braeden Justinraj
+          </span>
         </div>
-
         <div class="meta-item">
           <span class="meta-label">// DEPARTMENT</span>
-          <!--
-          ✏️  EDIT: Replace with your department or course name.
-          -->
-          <span class="meta-value amber">&gt; Computer Science &amp; Business Systems</span>
+          <span class="meta-value amber">
+            &gt; Computer Science &amp; Business Systems
+          </span>
         </div>
-
         <div class="meta-item">
           <span class="meta-label">// SESSION ID</span>
           <span class="meta-value">PKT-2025-CAP-0047</span>
         </div>
-
         <div class="meta-item">
           <span class="meta-label">// BUILD DATE</span>
-          <span class="meta-value" id="build-date">
-            <!-- Populated by inline JS below -->
-          </span>
+          <span class="meta-value" id="build-date"></span>
         </div>
-
       </div>
 
-    </section><!-- /nameplate -->
+    </section>
 
-    <!--
-    ── STATUS BAR ────────────────────────────────────────────────
-    Decorative system-status row. Pure aesthetics — edit or remove
-    the individual .status-item spans freely.
-    ──────────────────────────────────────────────────────────────
-    -->
+    <!-- ── STATUS BAR ─────────────────────────────────────────── -->
     <div class="status-bar" role="status" aria-label="System Status">
-
-      <span class="status-item">
-        SYS: <span class="status-ok">[OK]</span>
-      </span>
-
-      <span class="status-item">
-        NET: <span class="status-ok">[CONNECTED]</span>
-      </span>
-
-      <span class="status-item">
-        AUTH: <span class="status-ok">[VERIFIED]</span>
-      </span>
-
+      <span class="status-item">SYS: <span class="status-ok">[OK]</span></span>
+      <span class="status-item">NET: <span class="status-ok">[CONNECTED]</span></span>
+      <span class="status-item">AUTH: <span class="status-ok">[VERIFIED]</span></span>
       <span class="status-item">
         MODULES:&nbsp;
-        <!-- ASCII progress bar: [||||||||||.....] -->
         <span class="progress-bar" aria-label="Modules loaded: 87%">
           <span class="progress-track">
-            <span
-              class="progress-fill"
-              style="--bar-fill: 87%;"
-            ></span>
+            <span class="progress-fill" style="--bar-fill: 87%;"></span>
           </span>
           87%
         </span>
       </span>
+      <span class="status-item">ERR: <span class="status-err">[0]</span></span>
+    </div>
 
-      <span class="status-item">
-        ERR: <span class="status-err">[0]</span>
-      </span>
-
-    </div><!-- /status-bar -->
-
-    <!--
-    ── NAVIGATION HUB ────────────────────────────────────────────
-    The three main action buttons.
-
-    ✏️  EDIT HERE (Links):
-        Button 1 → Change href="presentation.pptx" to your PPT path.
-        Button 2 → Change href="model1.html" to your first model path.
-        Button 3 → Change href="model2.html" to your second model path.
-
-    ✏️  EDIT HERE (Labels):
-        - .btn-label  → Main button label text
-        - .btn-sublabel → Descriptor line beneath
-        - [Name 1] / [Name 2] in the Digital Model buttons
-    ──────────────────────────────────────────────────────────────
-    -->
+    <!-- ── NAVIGATION HUB ─────────────────────────────────────── -->
     <section class="nav-hub" aria-label="Navigation Hub">
 
       <p class="nav-hub-header">
         $ ls -la ./project-assets/ ──────────────────────────────────
       </p>
 
-      <nav class="nav-buttons" aria-label="Project Assets">
+      <nav aria-label="Project Assets">
 
-        <!--
-        ── BUTTON 1: PROJECT PRESENTATION ──────────────────────────
-        ✏️  EDIT: href="presentation.pptx" → your actual PPT file path
-        ────────────────────────────────────────────────────────────
-        -->
-        <a
-          href="https://www.canva.com/design/DAHGMumvjGA/oAOQgwrssS7_MX3SyBYGiw/edit?ui=eyJBIjp7fX0&referrer=https%3A%2F%2Fwww.canva.com%2Fs%2Ftemplates%3Fquery%3Dblack%2Belegant%2Bpitch%26adj%3DeyJFIjp7IkEiOiJ0QUV4UkxnODFSSSJ9fQ"
-          class="nav-btn"
-          aria-label="Open Project Presentation slide deck"
-          title="Project Presentation (PPT)"
-        >
-          <span class="btn-index">// FILE_01 :: SLIDES</span>
-          <span class="btn-glyph" aria-hidden="true">▶</span>
-          <span class="btn-label">Project Presentation</span>
-          <span class="btn-sublabel">
-            FORMAT: .pptx<br />
-            TYPE:   slide-deck<br />
-            STATUS: [READY]
-          </span>
-          <span class="btn-arrow" aria-hidden="true">──&gt; OPEN</span>
-        </a>
+        <!-- Row 1: three primary launch buttons -->
+        <div class="nav-buttons">
 
-        <!--
-        ── BUTTON 2: DIGITAL MODEL — NAME 1 ────────────────────────
-        ✏️  EDIT: href="SMA_V7.html" → your actual model 1 file path
-        ✏️  EDIT: "Slime Mould Simulation" → your actual model/person name
-        ────────────────────────────────────────────────────────────
-        -->
-        <a
-          href="SMA_V7.html"
-          class="nav-btn"
-          aria-label="Open Digital Model: Name 1"
-          title="Digital Model: Name 1"
-        >
-          <span class="btn-index">// FILE_02 :: MODEL_A</span>
-          <span class="btn-glyph" aria-hidden="true">◈</span>
+          <a href="https://www.canva.com/design/DAHGMumvjGA/oAOQgwrssS7_MX3SyBYGiw/edit"
+             class="nav-btn"
+             aria-label="Open Project Presentation"
+             title="Project Presentation">
+            <span class="btn-index">// FILE_01 :: SLIDES</span>
+            <span class="btn-glyph" aria-hidden="true">▶</span>
+            <span class="btn-label">Project Presentation</span>
+            <span class="btn-sublabel">
+              FORMAT: .pptx<br>
+              TYPE:&nbsp;&nbsp; slide-deck<br>
+              STATUS: [READY]
+            </span>
+            <span class="btn-arrow" aria-hidden="true">──&gt; OPEN</span>
+          </a>
+
+          <a href="SMA_V7.html"
+             class="nav-btn"
+             aria-label="Open Slime Mould Simulation"
+             title="Slime Mould Simulation">
+            <span class="btn-index">// FILE_02 :: MODEL_A</span>
+            <span class="btn-glyph" aria-hidden="true">◈</span>
+            <span class="btn-label">Slime Mould Simulation</span>
+            <span class="btn-sublabel">
+              FORMAT: .html<br>
+              TYPE:&nbsp;&nbsp; interactive-viz<br>
+              STATUS: [READY]
+            </span>
+            <span class="btn-arrow" aria-hidden="true">──&gt; LAUNCH</span>
+          </a>
+
+          <a href="ACO_V7.html"
+             class="nav-btn"
+             aria-label="Open Ant Colony Simulation"
+             title="Ant Colony Simulation">
+            <span class="btn-index">// FILE_03 :: MODEL_B</span>
+            <span class="btn-glyph" aria-hidden="true">◈</span>
+            <span class="btn-label">Ant Colony Simulation</span>
+            <span class="btn-sublabel">
+              FORMAT: .html<br>
+              TYPE:&nbsp;&nbsp; interactive-viz<br>
+              STATUS: [READY]
+            </span>
+            <span class="btn-arrow" aria-hidden="true">──&gt; LAUNCH</span>
+          </a>
+
+        </div><!-- /row 1 -->
+
+        <!-- Row 2: amber meta-navigation buttons -->
+        <div class="nav-buttons-row2">
+
+          <a href="#research"
+             class="nav-btn nav-btn--amber"
+             aria-label="Jump to Research and Documentation"
+             title="Research & Documentation">
+            <span class="btn-index">// FILE_04 :: DOCS</span>
+            <span class="btn-glyph" aria-hidden="true">📄</span>
+            <span class="btn-label">Research &amp; Docs</span>
+            <span class="btn-sublabel">
+              FORMAT: .pdf / .html<br>
+              TYPE:&nbsp;&nbsp; documentation<br>
+              STATUS: [READY]
+            </span>
+            <span class="btn-arrow" aria-hidden="true">──&gt; VIEW</span>
+          </a>
+
+          <a href="#team"
+             class="nav-btn nav-btn--amber"
+             aria-label="Jump to Team Details"
+             title="Team Details">
+            <span class="btn-index">// FILE_05 :: TEAM</span>
+            <span class="btn-glyph" aria-hidden="true">◻</span>
+            <span class="btn-label">Team Details</span>
+            <span class="btn-sublabel">
+              FORMAT: .html<br>
+              TYPE:&nbsp;&nbsp; personnel-data<br>
+              STATUS: [READY]
+            </span>
+            <span class="btn-arrow" aria-hidden="true">──&gt; VIEW</span>
+          </a>
+
+        </div><!-- /row 2 -->
+
+      </nav>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════
+         RESEARCH & DOCUMENTATION — #research
+    ════════════════════════════════════════════════════════════ -->
+    <section
+      id="research"
+      class="content-section"
+      aria-label="Research and Documentation"
+      data-observe
+    >
+
+      <div class="section-header">
+        <p class="section-header-prompt">
+          $ cat ./docs/research.md ──────────────────────────────────
+        </p>
+        <h2 class="section-title">◈ Research &amp; Documentation</h2>
+        <p class="section-divider" aria-hidden="true">
+          ──────────────────────────────────────────────────────────
+        </p>
+      </div>
+
+      <!-- Presentation embed (16:9) -->
+      <div class="embed-block">
+        <p class="embed-label">
+          // EMBED_01 :: PRESENTATION — Google Slides / PowerPoint Online
+        </p>
+        <div class="embed-frame-wrap" role="region" aria-label="Embedded Presentation">
           <!--
-          ✏️  EDIT: Change "Model Alpha" to your actual name/label
+            ✏️  EDIT: paste your Google Slides or OneDrive embed src here.
+            Google Slides: File → Share → Publish to web → Embed → copy src.
+            Leave src="" to keep the placeholder visible.
           -->
-          <span class="btn-label">Slime Mould Simulation</span>
-          <span class="btn-sublabel">
-            FORMAT: .html<br />
-            TYPE:   interactive-viz<br />
-            STATUS: [READY]
-          </span>
-          <span class="btn-arrow" aria-hidden="true">──&gt; LAUNCH</span>
-        </a>
+          <iframe
+            src=""
+            allowfullscreen
+            title="Project Presentation Slides"
+            loading="lazy"
+          ></iframe>
+          <div class="embed-placeholder" id="slides-placeholder" aria-hidden="true">
+            <span class="embed-placeholder-glyph">▶</span>
+            <span>// AWAITING_EMBED_SRC</span>
+            <span style="font-size:0.6rem;color:rgba(31,82,31,0.7);">
+              Add your Google Slides or OneDrive embed URL to the iframe src
+            </span>
+          </div>
+        </div>
+      </div>
 
-        <!--
-        ── BUTTON 3: DIGITAL MODEL — NAME 2 ────────────────────────
-        ✏️  EDIT: href="model2.html" → your actual model 2 file path
-        ✏️  EDIT: "[Name 2]" → your actual model/person name
-        ────────────────────────────────────────────────────────────
-        -->
-        <a
-          href="ACO_V7.html"
-          class="nav-btn"
-          aria-label="Open Digital Model: Name 2"
-          title="Digital Model: Name 2"
-        >
-          <span class="btn-index">// FILE_03 :: MODEL_B</span>
-          <span class="btn-glyph" aria-hidden="true">◈</span>
+      <!-- PDF embed — full width -->
+      <div class="doc-block">
+        <p class="doc-block-label">
+          // EMBED_02 :: RESEARCH_PAPER — PDF
+        </p>
+        <div class="pdf-frame-wrap" role="region" aria-label="Embedded PDF">
           <!--
-          ✏️  EDIT: Change "Model Beta" to your actual name/label
+            ✏️  EDIT: Replace src="SMA_ACO_Research.pdf" with your PDF path.
+            Local:        src="docs/research-paper.pdf"
+            Google Drive: src="https://drive.google.com/file/d/XXXXX/preview"
           -->
-          <span class="btn-label">Ant Colony Simulation</span>
-          <span class="btn-sublabel">
-            FORMAT: .html<br />
-            TYPE:   interactive-viz<br />
-            STATUS: [READY]
-          </span>
-          <span class="btn-arrow" aria-hidden="true">──&gt; LAUNCH</span>
-        </a>
+          <iframe
+            src="SMA_ACO_Research.pdf"
+            title="Research Paper PDF"
+            loading="lazy"
+          ></iframe>
+          <div class="embed-placeholder" id="pdf-placeholder" aria-hidden="true">
+            <span class="embed-placeholder-glyph">📄</span>
+            <span>// AWAITING_PDF_SRC</span>
+            <span style="font-size:0.6rem;color:rgba(31,82,31,0.7);">
+              Add your PDF path or Google Drive preview URL to the iframe src
+            </span>
+          </div>
+        </div>
+      </div>
 
-      </nav><!-- /nav-buttons -->
+    </section><!-- /research -->
 
-    </section><!-- /nav-hub -->
+    <!-- ════════════════════════════════════════════════════════════
+         TEAM DETAILS — #team
+    ════════════════════════════════════════════════════════════ -->
+    <section
+      id="team"
+      class="content-section"
+      aria-label="Team Details"
+      data-observe
+    >
 
-    <!--
-    ── FOOTER ────────────────────────────────────────────────────
-    Shell prompt waiting for input — decorative but authentic.
-    ──────────────────────────────────────────────────────────────
-    -->
+      <div class="section-header">
+        <p class="section-header-prompt">
+          $ cat ./team/members.json ─────────────────────────────────
+        </p>
+        <h2 class="section-title">◻ Team Details</h2>
+        <p class="section-divider" aria-hidden="true">
+          ──────────────────────────────────────────────────────────
+        </p>
+      </div>
+
+      <div class="team-grid" role="list" aria-label="Team members">
+
+        <!-- ── MEMBER 1 ── -->
+        <article class="member-card" role="listitem" aria-label="Mudit Dixit">
+          <div class="member-photo-wrap">
+            <!--✏️ EDIT: src="photos/mudit.jpg" -->
+            <img
+              src=""
+              alt="Photo of Mudit Dixit"
+              class="member-photo"
+              id="photo-member1"
+              onerror="this.style.display='none';
+                       document.getElementById('ph1').style.display='flex';"
+            >
+            <div class="member-photo-placeholder" id="ph1"
+                 aria-hidden="true" style="display:flex;">◻</div>
+          </div>
+          <div class="member-info">
+            <span class="member-index">// MEMBER_01</span>
+            <p class="member-name">Mudit Dixit</p>
+            <hr class="member-rule" aria-hidden="true">
+            <div class="member-meta">
+              <div class="member-meta-row">
+                <span class="member-meta-key">SAP:</span>
+                <span class="member-meta-val">70362500065</span>
+              </div>
+              <div class="member-meta-row">
+                <span class="member-meta-key">ROLL:</span>
+                <span class="member-meta-val amber">E013</span>
+              </div>
+            </div>
+            <span class="member-division-badge">B.Tech CSBS E1</span>
+          </div>
+        </article>
+
+        <!-- ── MEMBER 2 ── -->
+        <article class="member-card" role="listitem" aria-label="Nimay Gupta">
+          <div class="member-photo-wrap">
+            <!--✏️ EDIT: src="photos/nimay.jpg" -->
+            <img
+              src=""
+              alt="Photo of Nimay Gupta"
+              class="member-photo"
+              id="photo-member2"
+              onerror="this.style.display='none';
+                       document.getElementById('ph2').style.display='flex';"
+            >
+            <div class="member-photo-placeholder" id="ph2"
+                 aria-hidden="true" style="display:flex;">◻</div>
+          </div>
+          <div class="member-info">
+            <span class="member-index">// MEMBER_02</span>
+            <p class="member-name">Nimay Gupta</p>
+            <hr class="member-rule" aria-hidden="true">
+            <div class="member-meta">
+              <div class="member-meta-row">
+                <span class="member-meta-key">SAP:</span>
+                <span class="member-meta-val">70362500084</span>
+              </div>
+              <div class="member-meta-row">
+                <span class="member-meta-key">ROLL:</span>
+                <span class="member-meta-val amber">E016</span>
+              </div>
+            </div>
+            <span class="member-division-badge">B.Tech CSBS E1</span>
+          </div>
+        </article>
+
+        <!-- ── MEMBER 3 ── -->
+        <article class="member-card" role="listitem" aria-label="Aryav Gupta">
+          <div class="member-photo-wrap">
+            <!--✏️ EDIT: src="photos/aryav.jpg" -->
+            <img
+              src=""
+              alt="Photo of Aryav Gupta"
+              class="member-photo"
+              id="photo-member3"
+              onerror="this.style.display='none';
+                       document.getElementById('ph3').style.display='flex';"
+            >
+            <div class="member-photo-placeholder" id="ph3"
+                 aria-hidden="true" style="display:flex;">◻</div>
+          </div>
+          <div class="member-info">
+            <span class="member-index">// MEMBER_03</span>
+            <p class="member-name">Aryav Gupta</p>
+            <hr class="member-rule" aria-hidden="true">
+            <div class="member-meta">
+              <div class="member-meta-row">
+                <span class="member-meta-key">SAP:</span>
+                <span class="member-meta-val">70362500020</span>
+              </div>
+              <div class="member-meta-row">
+                <span class="member-meta-key">ROLL:</span>
+                <span class="member-meta-val amber">E018</span>
+              </div>
+            </div>
+            <span class="member-division-badge">B.Tech CSBS E1</span>
+          </div>
+        </article>
+
+        <!-- ── MEMBER 4 ── -->
+        <article class="member-card" role="listitem" aria-label="Braeden Justinraj">
+          <div class="member-photo-wrap">
+            <!--✏️ EDIT: src="photos/braeden.jpg" -->
+            <img
+              src="Braeden.jpg"
+              alt="Photo of Braeden Justinraj"
+              class="member-photo"
+              id="photo-member4"
+              onerror="this.style.display='none';
+                       document.getElementById('ph4').style.display='flex';"
+            >
+            <div class="member-photo-placeholder" id="ph4"
+                 aria-hidden="true" style="display:flex;">◻</div>
+          </div>
+          <div class="member-info">
+            <span class="member-index">// MEMBER_04</span>
+            <p class="member-name">Braeden Justinraj</p>
+            <hr class="member-rule" aria-hidden="true">
+            <div class="member-meta">
+              <div class="member-meta-row">
+                <span class="member-meta-key">SAP:</span>
+                <span class="member-meta-val">70362500076</span>
+              </div>
+              <div class="member-meta-row">
+                <span class="member-meta-key">ROLL:</span>
+                <span class="member-meta-val amber">E026</span>
+              </div>
+            </div>
+            <span class="member-division-badge">B.Tech CSBS E1</span>
+          </div>
+        </article>
+
+      </div><!-- /team-grid -->
+
+    </section><!-- /team -->
+
+    <!-- ── FOOTER ─────────────────────────────────────────────── -->
     <footer class="terminal-footer" role="contentinfo">
-
       <p class="footer-prompt" aria-label="Terminal prompt">
         root@university:~/projects/capstone $&nbsp;
         <span class="blink-cursor" aria-hidden="true"></span>
       </p>
-
       <p class="footer-info" aria-hidden="true">
-        <!--
-        ✏️  EDIT: Update the academic year if needed.
-        -->
         EXIT 0 :: © 2025 — ALL RIGHTS RESERVED :: CSBS DEPT.
       </p>
-
     </footer>
 
-  </main><!-- /terminal-window -->
+  </main>
 
-  <!--
-  ================================================================
-    INLINE JAVASCRIPT
-    Minimal JS — only used to inject the live build date.
-    No frameworks, no dependencies.
-  ================================================================
-  -->
   <script>
-    /*
-     * Populate the build date field with today's date.
-     * Format: YYYY-MM-DD (ISO 8601, feels appropriately machine-like)
-     */
+    /* ── Build date ───────────────────────────────────────────── */
     (function () {
       const el = document.getElementById('build-date');
-      if (el) {
-        const now   = new Date();
-        const yyyy  = now.getFullYear();
-        const mm    = String(now.getMonth() + 1).padStart(2, '0');
-        const dd    = String(now.getDate()).padStart(2, '0');
-        el.textContent = `> ${yyyy}-${mm}-${dd}`;
+      if (!el) return;
+      const d  = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      el.textContent = `> ${d.getFullYear()}-${mm}-${dd}`;
+    })();
+
+    /* ── Scroll reveal ────────────────────────────────────────── */
+    (function () {
+      const targets = document.querySelectorAll('[data-observe]');
+      if (!targets.length) return;
+
+      if (!('IntersectionObserver' in window)) {
+        targets.forEach(el => { el.style.opacity = '1'; });
+        return;
       }
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+      targets.forEach(el => io.observe(el));
+    })();
+
+    /* ── iframe placeholder logic ─────────────────────────────── */
+    (function () {
+      [
+        { title: 'Project Presentation Slides', id: 'slides-placeholder' },
+        { title: 'Research Paper PDF',          id: 'pdf-placeholder'    }
+      ].forEach(({ title, id }) => {
+        const frame = document.querySelector(`iframe[title="${title}"]`);
+        const ph    = document.getElementById(id);
+        if (!frame || !ph) return;
+
+        const hide = () => {
+          if (frame.src && frame.src !== window.location.href) {
+            ph.style.display = 'none';
+          }
+        };
+
+        hide();
+        frame.addEventListener('load', hide);
+      });
     })();
   </script>
 
 </body>
 </html>
+```
