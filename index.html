@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
   <title>PROJECT::START — TERMINAL</title>
 
   <link
@@ -48,7 +47,7 @@
       border-radius: 0 !important;
     }
 
-    html { font-size: 16px; scroll-behavior: smooth; }
+    html { font-size: 18px; scroll-behavior: smooth; }
 
     body {
       background-color: var(--color-bg);
@@ -59,7 +58,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 2rem 1.5rem;
+      padding: 2.5rem 2rem;
       position: relative;
       overflow-x: hidden;
       text-shadow: var(--glow-primary);
@@ -143,7 +142,7 @@
     ============================================================ */
     .terminal-window {
       width: 100%;
-      max-width: 860px;
+      max-width: 1100px;
       display: flex;
       flex-direction: column;
       gap: 0;
@@ -184,7 +183,7 @@
     ============================================================ */
     .nameplate {
       border: 1px solid var(--color-muted);
-      padding: 2rem 2rem 1.75rem;
+      padding: 2.5rem 2.5rem 2.25rem;
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
@@ -196,7 +195,7 @@
     }
 
     .nameplate-prompt {
-      font-size: 0.72rem;
+      font-size: 0.8rem;
       color: var(--color-secondary);
       text-shadow: var(--glow-secondary);
       letter-spacing: 0.06em;
@@ -205,7 +204,7 @@
     .ascii-title-wrap { display: flex; flex-direction: column; gap: 0.15rem; }
 
     .ascii-border-line {
-      font-size: 0.78rem;
+      font-size: 0.88rem;
       color: var(--color-muted);
       text-shadow: none;
       user-select: none;
@@ -215,7 +214,7 @@
 
     .project-title {
       display: inline-block;
-      font-size: clamp(1.4rem, 4vw, 2.1rem);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -255,7 +254,7 @@
     .meta-item { display: flex; flex-direction: column; gap: 0.1rem; }
 
     .meta-label {
-      font-size: 0.65rem;
+      font-size: 0.72rem;
       color: var(--color-muted);
       text-shadow: none;
       letter-spacing: 0.14em;
@@ -263,7 +262,7 @@
     }
 
     .meta-value {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: var(--color-primary);
       text-shadow: var(--glow-primary);
       letter-spacing: 0.04em;
@@ -280,7 +279,7 @@
     .status-bar {
       border-left: 1px solid var(--color-muted);
       border-right: 1px solid var(--color-muted);
-      padding: 0.5rem 2rem;
+      padding: 0.6rem 2.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -292,7 +291,7 @@
     }
 
     .status-item {
-      font-size: 0.65rem;
+      font-size: 0.72rem;
       color: var(--color-muted);
       letter-spacing: 0.08em;
       text-shadow: none;
@@ -304,12 +303,12 @@
     .status-ok  { color: var(--color-primary); text-shadow: var(--glow-primary); }
     .status-err { color: var(--color-error);   text-shadow: 0 0 6px rgba(255,51,51,0.5); }
 
-    .progress-bar { display: flex; align-items: center; gap: 0.4ch; font-size: 0.65rem; }
+    .progress-bar { display: flex; align-items: center; gap: 0.4ch; font-size: 0.72rem; }
 
     .progress-track {
       display: inline-block;
-      width: 80px;
-      height: 0.7rem;
+      width: 100px;
+      height: 0.8rem;
       border: 1px solid var(--color-muted);
       position: relative;
       overflow: hidden;
@@ -330,7 +329,7 @@
     .nav-hub {
       border: 1px solid var(--color-muted);
       border-top: none;
-      padding: 2rem;
+      padding: 2.5rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -339,7 +338,7 @@
     }
 
     .nav-hub-header {
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: var(--color-secondary);
       text-shadow: var(--glow-secondary);
       letter-spacing: 0.12em;
@@ -352,10 +351,6 @@
       gap: 1rem;
     }
 
-    /*
-      Row 2: 2 columns, width capped to align under columns 1 & 2.
-      Right edge of btn-5 aligns with right edge of btn-2.
-    */
     .nav-buttons-row2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -372,7 +367,7 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 0.75rem;
-      padding: 1.5rem 1.25rem;
+      padding: 1.75rem 1.5rem;
       border: 1px solid var(--color-muted);
       cursor: pointer;
       position: relative;
@@ -436,7 +431,7 @@
 
     /* ── Button child elements ── */
     .btn-index {
-      font-size: 0.62rem;
+      font-size: 0.7rem;
       color: var(--color-muted);
       letter-spacing: 0.1em;
       text-shadow: none;
@@ -446,7 +441,7 @@
     .nav-btn:hover .btn-index { color: var(--color-secondary); text-shadow: var(--glow-secondary); }
 
     .btn-glyph {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       line-height: 1;
       color: var(--color-primary);
       text-shadow: var(--glow-primary);
@@ -456,7 +451,7 @@
     .nav-btn:hover .btn-glyph { text-shadow: var(--glow-strong); }
 
     .btn-label {
-      font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+      font-size: clamp(0.82rem, 1.5vw, 0.95rem);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -469,18 +464,18 @@
     .btn-label::after  { content: ' ]'; }
 
     .btn-sublabel {
-      font-size: 0.62rem;
+      font-size: 0.7rem;
       color: var(--color-muted);
       letter-spacing: 0.06em;
       text-shadow: none;
-      line-height: 1.5;
+      line-height: 1.6;
       transition: color 0.18s ease;
     }
 
     .nav-btn:hover .btn-sublabel { color: var(--color-primary); text-shadow: var(--glow-primary); }
 
     .btn-arrow {
-      font-size: 0.75rem;
+      font-size: 0.82rem;
       color: var(--color-muted);
       margin-top: auto;
       transition: color 0.18s ease, transform 0.18s ease;
@@ -490,12 +485,11 @@
 
     /* ============================================================
        SHARED CONTENT SECTION SHELL
-       Starts invisible; .reveal applied by IntersectionObserver.
     ============================================================ */
     .content-section {
       border: 1px solid var(--color-muted);
       border-top: none;
-      padding: 2rem;
+      padding: 2.5rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -505,14 +499,14 @@
     .section-header { display: flex; flex-direction: column; gap: 0.4rem; }
 
     .section-header-prompt {
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: var(--color-secondary);
       text-shadow: var(--glow-secondary);
       letter-spacing: 0.12em;
     }
 
     .section-title {
-      font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
@@ -535,13 +529,12 @@
     .embed-block { display: flex; flex-direction: column; gap: 0.6rem; }
 
     .embed-label {
-      font-size: 0.65rem;
+      font-size: 0.72rem;
       color: var(--color-secondary);
       text-shadow: var(--glow-secondary);
       letter-spacing: 0.12em;
     }
 
-    /* 16:9 responsive iframe wrapper */
     .embed-frame-wrap {
       position: relative;
       width: 100%;
@@ -580,11 +573,10 @@
       text-shadow: none;
     }
 
-    /* Full-width PDF block */
     .doc-block { display: flex; flex-direction: column; gap: 0.6rem; }
 
     .doc-block-label {
-      font-size: 0.65rem;
+      font-size: 0.72rem;
       color: var(--color-secondary);
       text-shadow: var(--glow-secondary);
       letter-spacing: 0.12em;
@@ -594,7 +586,7 @@
       border: 1px solid var(--color-muted);
       background-color: #0d0d0d;
       position: relative;
-      height: 480px;
+      height: 620px;
       overflow: hidden;
     }
 
@@ -605,27 +597,28 @@
     }
 
     /* ============================================================
-       TEAM SECTION
+       TEAM SECTION — FIXED LAYOUT
     ============================================================ */
 
-    /* 4 equal columns on desktop — all members in one row */
+    /* 4 equal columns; stretch ensures all cells share the same height */
     .team-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
+      align-items: stretch;        /* ← equalises row height */
     }
 
-    /* ── Member card ── */
     .member-card {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.85rem;
-      padding: 1.25rem 0.75rem 1rem;
+      padding: 1.5rem 1rem 1.25rem;
       border: 1px solid var(--color-muted);
       position: relative;
       overflow: hidden;
       text-align: center;
+      height: 100%;
       transition:
         border-color     0.18s ease,
         background-color 0.18s ease,
@@ -653,18 +646,21 @@
       box-shadow: var(--glow-primary);
     }
 
-    /* ── Photo area ── */
+    /* ── Fixed-square photo container ── */
     .member-photo-wrap {
       position: relative;
-      width: 72px;
-      height: 72px;
-      flex-shrink: 0;
+      width: 90px;
+      height: 90px;                /* fixed square — never stretches */
+      flex-shrink: 0;              /* won't compress if card grows tall */
+      overflow: hidden;
     }
 
+    /* object-fit: cover fills the square without distortion */
     .member-photo {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: cover;           /* ← key fix: crops to fill */
+      object-position: center top; /* favour faces */
       display: block;
       filter: grayscale(100%) sepia(40%) hue-rotate(80deg) brightness(0.85);
       transition: filter 0.3s ease;
@@ -674,10 +670,10 @@
       filter: grayscale(100%) sepia(60%) hue-rotate(80deg) brightness(1.05);
     }
 
-    /* Clean placeholder — no heavy wireframe styling */
+    /* Placeholder overlays inside the wrap at the exact same size */
     .member-photo-placeholder {
-      width: 100%;
-      height: 100%;
+      position: absolute;          /* overlays the wrap */
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -689,16 +685,17 @@
       background-color: transparent;
     }
 
-    /* ── Member info ── */
+    /* ── Info block grows to fill remaining card height ── */
     .member-info {
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
       width: 100%;
+      flex: 1;                     /* fills remaining height */
     }
 
     .member-index {
-      font-size: 0.55rem;
+      font-size: 0.62rem;
       color: var(--color-muted);
       letter-spacing: 0.1em;
       text-shadow: none;
@@ -711,7 +708,7 @@
     }
 
     .member-name {
-      font-size: clamp(0.65rem, 1.2vw, 0.78rem);
+      font-size: clamp(0.72rem, 1.2vw, 0.9rem);
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.06em;
@@ -746,7 +743,7 @@
       align-items: baseline;
       justify-content: center;
       gap: 0.4ch;
-      font-size: 0.58rem;
+      font-size: 0.65rem;
       line-height: 1.4;
     }
 
@@ -770,17 +767,13 @@
       text-shadow: var(--glow-secondary);
     }
 
-    /*
-      UPDATED: white-space: nowrap added to prevent "B.Tech CSBS E1"
-      from wrapping inside the narrow 4-column card.
-      letter-spacing tightened from 0.1em → 0.06em for the wider text.
-    */
+    /* Badge pinned to the bottom of the info block */
     .member-division-badge {
       display: inline-block;
-      margin-top: 0.2rem;
-      padding: 0.12rem 0.4rem;
+      margin-top: auto;
+      padding: 0.15rem 0.5rem;
       border: 1px solid var(--color-muted);
-      font-size: 0.55rem;
+      font-size: 0.62rem;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--color-secondary);
@@ -866,19 +859,25 @@
         align-items: flex-start;
         gap: 0.3rem;
       }
+    }
 
-      /* 2-col nav row 1 on small tablet before going single */
-      @media (min-width: 480px) {
-        .nav-buttons { grid-template-columns: repeat(2, 1fr); }
-      }
+    /* 2-col nav row 1 on small tablet */
+    @media (min-width: 480px) and (max-width: 640px) {
+      .nav-buttons { grid-template-columns: repeat(2, 1fr); }
     }
 
     /* Mobile ≤480px: everything single column */
     @media (max-width: 480px) {
-      .meta-grid { grid-template-columns: 1fr; }
-      .team-grid { grid-template-columns: 1fr; }
+      .meta-grid  { grid-template-columns: 1fr; }
+      .team-grid  { grid-template-columns: 1fr; }
 
       .project-title { font-size: 1.2rem; }
+
+      /* Slightly larger photo on mobile for readability */
+      .member-photo-wrap {
+        width: 88px;
+        height: 88px;
+      }
 
       .ascii-border-line,
       .ascii-rule { overflow: hidden; text-overflow: clip; }
@@ -1088,14 +1087,9 @@
       <!-- Presentation embed (16:9) -->
       <div class="embed-block">
         <p class="embed-label">
-          // EMBED_01 :: PRESENTATION — Google Slides 
+          // EMBED_01 :: PRESENTATION — Google Slides
         </p>
         <div class="embed-frame-wrap" role="region" aria-label="Embedded Presentation">
-          <!--
-            ✏️  EDIT: paste your Google Slides or OneDrive embed src here.
-            Google Slides: File → Share → Publish to web → Embed → copy src.
-            Leave src="" to keep the placeholder visible.
-          -->
           <iframe
             src="https://docs.google.com/presentation/d/e/2PACX-1vRainKXMcxvWrckqNItUQzzocaiGzzqyj7Oekkf1l7GvqPnYLON1ddhbGOuiZzieA/pubembed?"
             allowfullscreen
@@ -1118,11 +1112,6 @@
           // EMBED_02 :: RESEARCH_PAPER — PDF
         </p>
         <div class="pdf-frame-wrap" role="region" aria-label="Embedded PDF">
-          <!--
-            ✏️  EDIT: Replace src="SMA_ACO_Research.pdf" with your PDF path.
-            Local:        src="docs/research-paper.pdf"
-            Google Drive: src="https://drive.google.com/file/d/XXXXX/preview"
-          -->
           <iframe
             src="SMA_ACO_Research.pdf"
             title="Research Paper PDF"
@@ -1233,7 +1222,7 @@
           <div class="member-photo-wrap">
             <!--✏️ EDIT: src="photos/aryav.jpg" -->
             <img
-              src=""
+              src="Aryav.jpg"
               alt="Photo of Aryav Gupta"
               class="member-photo"
               id="photo-member3"
@@ -1273,7 +1262,9 @@
               onerror="this.style.display='none';
                        document.getElementById('ph4').style.display='flex';"
             >
-            
+            <div class="member-photo-placeholder" id="ph4"
+                 aria-hidden="true" style="display:none;">◻</div>
+          </div><!-- ← closing tag that was missing in the original -->
           <div class="member-info">
             <span class="member-index">// MEMBER_04</span>
             <p class="member-name">Braeden Justinraj</p>
@@ -1366,4 +1357,3 @@
 
 </body>
 </html>
-```
